@@ -3,5 +3,6 @@ public class AppLauncher {
         System.out.println("Hello world!");
         System.out.println("hello");
         System.out.println("new sout");
+        System.out.println("testing");
     }
 }
