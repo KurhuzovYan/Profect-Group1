@@ -1,11 +1,16 @@
+package parsers;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import static constants.Constants.*;
+
+
 public class PrivatBankAPIParser {
-    private static final String API_URL = "https://api.privatbank.ua/";
+
     public String sendRequest(String endpoint) {
         HttpURLConnection connection = null;
         BufferedReader reader = null;

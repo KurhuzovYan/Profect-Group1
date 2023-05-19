@@ -1,3 +1,4 @@
+import parsers.PrivatBankAPIParser;
 import services.TelegramBotService;
 
 public class AppLauncher {
