@@ -1,4 +1,4 @@
-package servises;
+package parsers;
 
 import java.util.Date;
 
