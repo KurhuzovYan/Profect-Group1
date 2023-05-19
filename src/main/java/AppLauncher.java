@@ -1,6 +1,12 @@
+import services.TelegramBotService;
+
 public class AppLauncher {
     public static void main(String[] args) {
-        System.out.println("Hello world!");
+
+
+        TelegramBotService bot = new TelegramBotService();
+
+
     }
 
 }
