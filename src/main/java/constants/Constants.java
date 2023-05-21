@@ -6,3 +6,4 @@ public class Constants {
     public static final String BOT_NAME = "Group1ExchangeRatesBot";
     public static final String API_URL = "https://api.privatbank.ua/";
 }
+ 
