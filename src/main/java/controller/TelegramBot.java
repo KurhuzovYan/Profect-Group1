@@ -57,17 +57,18 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                                 .filter(button -> button.getCallbackData().equals(data))
                                 .forEach(button -> button.setText(button.getText() + " ✅")));
 
-
-                EditMessageReplyMarkup editMarkup = new EditMessageReplyMarkup();
-                editMarkup.setChatId(callbackQuery.getMessage().getChatId().toString());
-                editMarkup.setMessageId(callbackQuery.getMessage().getMessageId());
-                editMarkup.setReplyMarkup(markup);
-
-                execute(editMarkup);
+                execute(getEditMessageReplyMarkup(markup, callbackQuery));
             }
-            System.out.println(data);
         }
 
+    }
+
+    public static EditMessageReplyMarkup getEditMessageReplyMarkup(InlineKeyboardMarkup markup, CallbackQuery callbackQuery) {
+        return EditMessageReplyMarkup.builder()
+                .chatId(callbackQuery.getMessage().getChatId().toString())
+                .messageId(callbackQuery.getMessage().getMessageId())
+                .replyMarkup(markup)
+                .build();
     }
 
     @Override
