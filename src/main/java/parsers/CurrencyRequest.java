@@ -9,11 +9,12 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.*;
 
 class Test {
+    public CurrenciesPack currenciesPack = new CurrenciesPack();
     public static void main(String[] args) {
+        CurrenciesPack currenciesPack1 = new CurrenciesPack();
         CurrencyRequest test = new CurrencyRequest();
         test.getCurrencyFromMono();
         System.out.println("TEST");
@@ -31,6 +32,7 @@ public class CurrencyRequest {
     public void getCurrencyFromMono() {
         String monoURL = "https://api.monobank.ua/bank/currency";
 
+        CurrenciesPack pack = new CurrenciesPack();
         Type collectionTypeMono = new TypeToken<Collection<ResponseMono>>() {
         }.getType();
         ArrayList<ResponseMono> rez = getBankData(collectionTypeMono, monoURL);
@@ -39,6 +41,15 @@ public class CurrencyRequest {
                         | o.getCurrencyCodeA() == 978 & o.getCurrencyCodeB() == 980
                         | o.getCurrencyCodeA() == 826)
                 .toList();
+
+        var ee = pack.getLastUpdate();
+        Date date = new Date();
+        pack.setLastUpdate(new Date(date.getTime()));
+        List<CurrencyHolder> tempList = pack.getCurrencies();
+
+        tempList.add(new CurrencyHolder(nuznie.get(1).));
+        pack.setCurrencies(tempList);
+
 
         System.out.println(nuznie);
 
