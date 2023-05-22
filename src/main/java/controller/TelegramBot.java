@@ -12,6 +12,9 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import services.commands.StartCommand;
 
+
+import static constants.Currencies.*;
+
 public class TelegramBot extends TelegramLongPollingCommandBot {
 
     public TelegramBot() {
@@ -44,13 +47,20 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                     execute(SendMessage.builder()
                             .text("Кількість знаків після коми")
                             .chatId(update.getCallbackQuery().getMessage().getChatId().toString())
-                            .replyMarkup(createButtonWithDigitsAfterDot())
+                            .replyMarkup(createButtonsWithDigitsAfterDot())
+                            .build());
+                    break;
+                case "5":
+                    execute(SendMessage.builder()
+                            .text("Оберіть необхідну валюту або декілька")
+                            .chatId(update.getCallbackQuery().getMessage().getChatId().toString())
+                            .replyMarkup(createButtonsWithCurrencies())
                             .build());
                     break;
             }
 
             if (data.equals("TwoDigitsAfterDot") || data.equals("ThreeDigitsAfterDot") || data.equals("FourDigitsAfterDot")) {
-                InlineKeyboardMarkup markup = createButtonWithDigitsAfterDot();
+                InlineKeyboardMarkup markup = createButtonsWithDigitsAfterDot();
 
                 markup.getKeyboard().forEach(buttons ->
                         buttons.stream()
@@ -58,12 +68,36 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                                 .forEach(button -> button.setText(button.getText() + " ✅")));
 
                 execute(getEditMessageReplyMarkup(markup, callbackQuery));
+
             }
+
+            if (data.equals(USD.name()) || data.equals(EUR.name()) || data.equals(GBP.name())) {
+                InlineKeyboardMarkup markup = createButtonsWithCurrencies();
+
+
+
+
+                markup.getKeyboard().forEach(buttons ->
+                        buttons.stream()
+                                .filter(button -> button.getCallbackData().equals(data))
+                                .forEach(button -> {
+                                    if (button.getText().equals(data)) {
+                                        button.setText(button.getText() + " ✅");
+                                    } else {
+                                        button.setText(data);
+                                    }
+                                }));
+
+                execute(getEditMessageReplyMarkup(markup, callbackQuery));
+            }
+
+
         }
 
     }
 
-    public static EditMessageReplyMarkup getEditMessageReplyMarkup(InlineKeyboardMarkup markup, CallbackQuery callbackQuery) {
+    public static EditMessageReplyMarkup getEditMessageReplyMarkup(InlineKeyboardMarkup markup, CallbackQuery
+            callbackQuery) {
         return EditMessageReplyMarkup.builder()
                 .chatId(callbackQuery.getMessage().getChatId().toString())
                 .messageId(callbackQuery.getMessage().getMessageId())

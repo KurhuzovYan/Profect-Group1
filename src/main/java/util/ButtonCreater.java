@@ -2,6 +2,7 @@ package util;
 
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import static constants.Currencies.*;
 
 import java.util.*;
 
@@ -38,7 +39,7 @@ public class ButtonCreater {
         return markup;
     }
 
-    public static InlineKeyboardMarkup createButtonWithDigitsAfterDot() {
+    public static InlineKeyboardMarkup createButtonsWithDigitsAfterDot() {
         List<InlineKeyboardButton> digitsButtons = new ArrayList<>();
 
         digitsButtons.add(getInlineKeyboardButton("2", "TwoDigitsAfterDot"));
@@ -57,6 +58,28 @@ public class ButtonCreater {
 
         return markup;
     }
+
+    public static InlineKeyboardMarkup createButtonsWithCurrencies() {
+        List<InlineKeyboardButton> digitsButtons = new ArrayList<>();
+
+        digitsButtons.add(getInlineKeyboardButton(USD.name(), "USD"));
+        digitsButtons.add(getInlineKeyboardButton(EUR.name(), "EUR"));
+        digitsButtons.add(getInlineKeyboardButton(GBP.name(), "GBP"));
+
+        List<List<InlineKeyboardButton>> buttons = new ArrayList<>();
+
+        for (InlineKeyboardButton button: digitsButtons) {
+            buttons.add(Arrays.asList(button));
+        }
+
+        InlineKeyboardMarkup markup = InlineKeyboardMarkup.builder()
+                .keyboard(buttons)
+                .build();
+
+        return markup;
+    }
+
+
 
     private static InlineKeyboardMarkup getInlineKeyboardMarkup(List<InlineKeyboardButton> buttons) {
         return InlineKeyboardMarkup.builder()
