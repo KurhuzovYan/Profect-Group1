@@ -45,9 +45,16 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                     break;
                 case "3":
                     execute(SendMessage.builder()
-                            .text("Кількість знаків після коми")
+                            .text("Оберіть кількість знаків після коми")
                             .chatId(update.getCallbackQuery().getMessage().getChatId().toString())
                             .replyMarkup(createButtonsWithDigitsAfterDot())
+                            .build());
+                    break;
+                case "4":
+                    execute(SendMessage.builder()
+                            .text("Оберіть необхідний банк")
+                            .chatId(update.getCallbackQuery().getMessage().getChatId().toString())
+                            .replyMarkup(createButtonsWithBanks())
                             .build());
                     break;
                 case "5":
@@ -69,29 +76,31 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
 
                 execute(getEditMessageReplyMarkup(markup, callbackQuery));
 
-            }
+            } else if (data.equals(USD.name()) || data.equals(EUR.name()) || data.equals(GBP.name())) {
+                InlineKeyboardMarkup replyMarkup = callbackQuery.getMessage().getReplyMarkup();
 
-            if (data.equals(USD.name()) || data.equals(EUR.name()) || data.equals(GBP.name())) {
-                InlineKeyboardMarkup markup = createButtonsWithCurrencies();
-
-
-
-
-                markup.getKeyboard().forEach(buttons ->
+                replyMarkup.getKeyboard().forEach(buttons ->
                         buttons.stream()
                                 .filter(button -> button.getCallbackData().equals(data))
                                 .forEach(button -> {
                                     if (button.getText().equals(data)) {
-                                        button.setText(button.getText() + " ✅");
+                                        button.setText(data + " ✅");
                                     } else {
                                         button.setText(data);
                                     }
                                 }));
 
+                execute(getEditMessageReplyMarkup(replyMarkup, callbackQuery));
+            } else if (data.equals("ПриватБанк") || data.equals("Монобанк") || data.equals("НБУ")) {
+                InlineKeyboardMarkup markup = createButtonsWithBanks();
+
+                markup.getKeyboard().forEach(buttons ->
+                        buttons.stream()
+                                .filter(button -> button.getCallbackData().equals(data))
+                                .forEach(button -> button.setText(button.getText() + " ✅")));
+
                 execute(getEditMessageReplyMarkup(markup, callbackQuery));
             }
-
-
         }
 
     }

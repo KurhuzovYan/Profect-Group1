@@ -78,6 +78,25 @@ public class ButtonCreater {
 
         return markup;
     }
+    public static InlineKeyboardMarkup createButtonsWithBanks() {
+        List<InlineKeyboardButton> digitsButtons = new ArrayList<>();
+
+        digitsButtons.add(getInlineKeyboardButton("ПриватБанк", "ПриватБанк"));
+        digitsButtons.add(getInlineKeyboardButton("Монобанк", "Монобанк"));
+        digitsButtons.add(getInlineKeyboardButton("НБУ", "НБУ"));
+
+        List<List<InlineKeyboardButton>> buttons = new ArrayList<>();
+
+        for (InlineKeyboardButton button: digitsButtons) {
+            buttons.add(Arrays.asList(button));
+        }
+
+        InlineKeyboardMarkup markup = InlineKeyboardMarkup.builder()
+                .keyboard(buttons)
+                .build();
+
+        return markup;
+    }
 
 
 
