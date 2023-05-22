@@ -47,7 +47,7 @@ public class CurrencyRequest {
         pack.setLastUpdate(new Date(date.getTime()));
         List<CurrencyHolder> tempList = pack.getCurrencies();
 
-        tempList.add(new CurrencyHolder(nuznie.get(1).));
+//        tempList.add(new CurrencyHolder(nuznie.get(1).));
         pack.setCurrencies(tempList);
 
 
