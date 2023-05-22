@@ -12,11 +12,11 @@ import java.net.http.HttpResponse;
 import java.util.*;
 
 class Test {
-    public CurrenciesPack currenciesPack = new CurrenciesPack();
+
     public static void main(String[] args) {
         CurrenciesPack currenciesPack1 = new CurrenciesPack();
         CurrencyRequest test = new CurrencyRequest();
-        test.getCurrencyFromMono();
+        CurrenciesPack currenciesPack2 = test.getCurrencyFromMono(currenciesPack1);
         System.out.println("TEST");
     }
 }
@@ -29,31 +29,48 @@ public class CurrencyRequest {
     private static final String CONTENT_TYPE = "Content-Type";
     public static final String JSON = "application/json; charset=UTF-8";
 
-    public void getCurrencyFromMono() {
+    public CurrenciesPack getCurrencyFromMono(CurrenciesPack pack) {
+        Date date = new Date();
+
+        if (pack.getLastUpdate().getTime() - date.getTime() < 300000) {
+            return pack;
+        }
+
+
         String monoURL = "https://api.monobank.ua/bank/currency";
 
-        CurrenciesPack pack = new CurrenciesPack();
         Type collectionTypeMono = new TypeToken<Collection<ResponseMono>>() {
         }.getType();
         ArrayList<ResponseMono> rez = getBankData(collectionTypeMono, monoURL);
-        var nuznie = rez.stream()
+        List<ResponseMono> needed = rez.stream()
                 .filter(o -> o.getCurrencyCodeA() == 840 & o.getCurrencyCodeB() == 980
                         | o.getCurrencyCodeA() == 978 & o.getCurrencyCodeB() == 980
                         | o.getCurrencyCodeA() == 826)
                 .toList();
 
-        var ee = pack.getLastUpdate();
-        Date date = new Date();
         pack.setLastUpdate(new Date(date.getTime()));
-        List<CurrencyHolder> tempList = pack.getCurrencies();
+        ArrayList<CurrencyHolder> tempList = new ArrayList<>();
 
-//        tempList.add(new CurrencyHolder(nuznie.get(1).));
+
+        for (int i = 0; i < needed.size(); i++) {
+            ResponseMono temp = needed.get(i);
+
+            CurrencyHolder currencyHolder = new CurrencyHolder(
+                    temp.getDate(),
+                    temp.getRateSell(),
+                    temp.getRateCross(),
+                    temp.getRateBuy(),
+                    Currencies.getById(temp.getCurrencyCodeB()),
+                    Currencies.getById(temp.getCurrencyCodeA())
+                    );
+
+            tempList.add(currencyHolder);
+        }
+
         pack.setCurrencies(tempList);
+        pack.setBankName("MonoBank");
 
-
-        System.out.println(nuznie);
-
-        System.out.println("TEST");
+        return pack;
     }
 
     public <K> ArrayList<K> getBankData(Type collectionType, String url) {

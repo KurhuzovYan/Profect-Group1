@@ -1,25 +1,19 @@
 package parsers;
 
 public enum Currencies {
-    UAH("Українська Гривня",0),
-    USD("Доллар США",1),
-    EUR("Євро",2),
-    GBF("Британьський Фунт Стерлінгів",3);
+    UAH("Українська Гривня",980),
+    USD("Доллар США",840),
+    EUR("Євро",978),
+    GBF("Британьський Фунт Стерлінгів",826),
+    UNKNOWN("UNKNOWN",0);
 
-    private String currencyName;
-    private int currencyIdentifier;
+    private final String currencyName;
+    private final int currencyIdentifier;
 
     Currencies(String currencyName, int currencyIdentifier) {
         this.currencyName = currencyName;
         this.currencyIdentifier = currencyIdentifier;
     }
-    Currencies(String currencyName) {
-        this.currencyName = currencyName;
-    }
-    Currencies( int currencyIdentifier) {
-        this.currencyIdentifier = currencyIdentifier;
-    }
-
 
     public String getCurrencyName() {
         return currencyName;
@@ -27,5 +21,12 @@ public enum Currencies {
 
     public int getCurrencyIdentifier() {
         return currencyIdentifier;
+    }
+
+    public static Currencies getById(int currencyIdentifier) {
+        for(Currencies e : values()) {
+            if(e.currencyIdentifier == currencyIdentifier) return e;
+        }
+        return UNKNOWN;
     }
 }
