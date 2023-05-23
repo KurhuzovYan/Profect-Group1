@@ -1,10 +1,7 @@
 package dto.general;
 
 import lombok.Data;
-import lombok.Getter;
-
 @Data
-@Getter
 public class NBU {
 
     private int r030;
