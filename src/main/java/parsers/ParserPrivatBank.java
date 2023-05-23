@@ -9,7 +9,7 @@ import java.net.URL;
 import static constants.Constants.*;
 
 
-public class PrivatBankAPIParser {
+public class ParserPrivatBank {
 
     public String sendRequest(String endpoint) {
         HttpURLConnection connection = null;
@@ -17,7 +17,7 @@ public class PrivatBankAPIParser {
         StringBuilder response = new StringBuilder();
 
         try {
-            URL url = new URL(API_URL + endpoint);
+            URL url = new URL(PRIVAT_API_URL + endpoint);
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
 
