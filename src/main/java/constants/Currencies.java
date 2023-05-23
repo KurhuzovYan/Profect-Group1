@@ -29,4 +29,10 @@ public enum Currencies {
         }
         return UNKNOWN;
     }
+    public static Currencies getByName(String currency) {
+        for(Currencies e : values()) {
+            if(e.name().equals(currency)) return e;
+        }
+        return UNKNOWN;
+    }
 }
