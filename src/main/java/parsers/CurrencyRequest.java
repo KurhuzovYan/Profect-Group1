@@ -2,6 +2,10 @@ package parsers;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import constants.Currencies;
+import dto.CurrencyHolder;
+import dto.general.Monobank;
+import dto.CurrenciesPack;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -10,17 +14,6 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.*;
-
-class Test {
-
-    public static void main(String[] args) {
-        CurrenciesPack currenciesPack1 = new CurrenciesPack();
-        CurrencyRequest test = new CurrencyRequest();
-        CurrenciesPack currenciesPack2 = test.getCurrencyFromMono(currenciesPack1);
-        System.out.println("TEST");
-    }
-}
-
 
 public class CurrencyRequest {
 
@@ -39,10 +32,10 @@ public class CurrencyRequest {
 
         String monoURL = "https://api.monobank.ua/bank/currency";
 
-        Type collectionTypeMono = new TypeToken<Collection<ResponseMono>>() {
+        Type collectionTypeMono = new TypeToken<Collection<Monobank>>() {
         }.getType();
-        ArrayList<ResponseMono> rez = getBankData(collectionTypeMono, monoURL);
-        List<ResponseMono> needed = rez.stream()
+        ArrayList<Monobank> rez = getBankData(collectionTypeMono, monoURL);
+        List<Monobank> needed = rez.stream()
                 .filter(o -> o.getCurrencyCodeA() == 840 & o.getCurrencyCodeB() == 980
                         | o.getCurrencyCodeA() == 978 & o.getCurrencyCodeB() == 980
                         | o.getCurrencyCodeA() == 826)
@@ -53,7 +46,7 @@ public class CurrencyRequest {
 
 
         for (int i = 0; i < needed.size(); i++) {
-            ResponseMono temp = needed.get(i);
+            Monobank temp = needed.get(i);
 
             CurrencyHolder currencyHolder = new CurrencyHolder(
                     temp.getDate(),

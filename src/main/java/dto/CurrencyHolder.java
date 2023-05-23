@@ -1,5 +1,6 @@
-package parsers;
+package dto;
 
+import constants.Currencies;
 import lombok.Data;
 
 import java.util.Date;

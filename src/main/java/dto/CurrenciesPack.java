@@ -1,4 +1,4 @@
-package parsers;
+package dto;
 
 import lombok.Data;
 
