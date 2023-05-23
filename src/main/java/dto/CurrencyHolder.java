@@ -20,11 +20,6 @@ public class CurrencyHolder {
         this.baseCurrency = baseCurrency;
         this.currency = currency;
     }
-    public CurrencyHolder(double saleRateNB, Currencies baseCurrency, Currencies currency) {
-        this.saleRateNB = saleRateNB;
-        this.baseCurrency = baseCurrency;
-        this.currency = currency;
-    }
     public CurrencyHolder(double saleRateNB, double purchaseRateNB, Currencies baseCurrency, Currencies currency) {
         this.saleRateNB = saleRateNB;
         this.purchaseRateNB = purchaseRateNB;

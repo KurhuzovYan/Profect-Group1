@@ -62,7 +62,7 @@ public class ParserPrivatBank {
         return currencies;
     }
 
-    public CurrenciesPack getCurrencyFromPrivatBank() {
+    public static CurrenciesPack getCurrencyFromPrivatBank() {
         List<PrivatBank> currencies = sendRequest("&coursid=11");
         List<PrivatBank> gbp = sendRequest("&coursid=12").stream()
                 .filter(currency -> currency.getCcy().equals(GBP.name()))

@@ -33,6 +33,7 @@ public class ParserNBU {
         List<CurrencyHolder> collect = getCommonCurrencies().stream()
                 .map(cur -> new CurrencyHolder(
                         cur.getRate(),
+                        0,
                         UAH,
                       Currencies.getById(cur.getR030())))
                 .collect(Collectors.toList());

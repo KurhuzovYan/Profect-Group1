@@ -6,6 +6,7 @@ import constants.Currencies;
 import dto.CurrencyHolder;
 import dto.general.Monobank;
 import dto.CurrenciesPack;
+import static constants.Constants.*;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -21,20 +22,18 @@ public class ParserMonobank {
     private static final Gson GSON = new Gson();
     private static final String CONTENT_TYPE = "Content-Type";
     public static final String JSON = "application/json; charset=UTF-8";
+    private static CurrenciesPack pack = new CurrenciesPack();
 
-    public CurrenciesPack getCurrencyFromMono(CurrenciesPack pack) {
+    public static CurrenciesPack getCurrencyFromMono() {
         Date date = new Date();
 
         if (pack.getLastUpdate().getTime() - date.getTime() < 300000) {
             return pack;
         }
 
-
-        String monoURL = "https://api.monobank.ua/bank/currency";
-
         Type collectionTypeMono = new TypeToken<Collection<Monobank>>() {
         }.getType();
-        ArrayList<Monobank> rez = getBankData(collectionTypeMono, monoURL);
+        ArrayList<Monobank> rez = getBankData(collectionTypeMono, MONO_API_URL);
         List<Monobank> needed = rez.stream()
                 .filter(o -> o.getCurrencyCodeA() == 840 & o.getCurrencyCodeB() == 980
                         | o.getCurrencyCodeA() == 978 & o.getCurrencyCodeB() == 980
@@ -61,12 +60,12 @@ public class ParserMonobank {
         }
 
         pack.setCurrencies(tempList);
-        pack.setBankName("MonoBank");
+        pack.setBankName("Монобанк");
 
         return pack;
     }
 
-    public <K> ArrayList<K> getBankData(Type collectionType, String url) {
+    public static  <K> ArrayList<K> getBankData(Type collectionType, String url) {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
                 .header(CONTENT_TYPE, JSON)
@@ -75,7 +74,7 @@ public class ParserMonobank {
         return currencyRequest(request, collectionType);
     }
 
-    private <E> E currencyRequest(HttpRequest request, Type type) {
+    private static  <E> E currencyRequest(HttpRequest request, Type type) {
         final HttpResponse<String> response;
         try {
             response = CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
