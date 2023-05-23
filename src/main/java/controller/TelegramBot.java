@@ -47,7 +47,7 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                     execute(SendMessage.builder()
                             .text("Оберіть кількість знаків після коми")
                             .chatId(update.getCallbackQuery().getMessage().getChatId().toString())
-                            .replyMarkup(createButtonsWithDigitsAfterDot())
+                            .replyMarkup(createButtonsWithNumberOfDecimalPlaces())
                             .build());
                     break;
                 case "4":
@@ -67,7 +67,7 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
             }
 
             if (data.equals("TwoDigitsAfterDot") || data.equals("ThreeDigitsAfterDot") || data.equals("FourDigitsAfterDot")) {
-                InlineKeyboardMarkup markup = createButtonsWithDigitsAfterDot();
+                InlineKeyboardMarkup markup = createButtonsWithNumberOfDecimalPlaces();
 
                 markup.getKeyboard().forEach(buttons ->
                         buttons.stream()
