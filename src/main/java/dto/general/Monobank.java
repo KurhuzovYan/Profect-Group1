@@ -1,11 +1,11 @@
-package parsers;
+package dto.general;
 
 import lombok.Data;
 
 import java.util.Date;
 
 @Data
-public class ResponseMono {
+public class Monobank {
         private int currencyCodeA;
         private int currencyCodeB;
         private long date;

@@ -1,5 +1,6 @@
-package parsers;
+package dto;
 
+import constants.Currencies;
 import lombok.Data;
 
 import java.util.Date;
@@ -13,6 +14,13 @@ public class CurrencyHolder {
 
     public CurrencyHolder(Date currencyDate, double saleRateNB, double rateCross, double purchaseRateNB, Currencies baseCurrency, Currencies currency) {
         this.currencyDate = currencyDate;
+        this.saleRateNB = saleRateNB;
+        this.rateCross = rateCross;
+        this.purchaseRateNB = purchaseRateNB;
+        this.baseCurrency = baseCurrency;
+        this.currency = currency;
+    }
+    public CurrencyHolder(double saleRateNB, double rateCross, double purchaseRateNB, Currencies baseCurrency, Currencies currency) {
         this.saleRateNB = saleRateNB;
         this.rateCross = rateCross;
         this.purchaseRateNB = purchaseRateNB;
