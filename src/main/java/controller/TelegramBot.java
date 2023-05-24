@@ -12,7 +12,6 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import services.commands.StartCommand;
 
-
 import static constants.Currencies.*;
 
 public class TelegramBot extends TelegramLongPollingCommandBot {
@@ -59,9 +58,16 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                     break;
                 case "5":
                     execute(SendMessage.builder()
-                            .text("Оберіть необхідну валюту або декілька")
+                            .text("Оберіть необхідні валюти")
                             .chatId(update.getCallbackQuery().getMessage().getChatId().toString())
                             .replyMarkup(createButtonsWithCurrencies())
+                            .build());
+                    break;
+                case "6":
+                    execute(SendMessage.builder()
+                            .text("Оберіть час cповіщення")
+                            .chatId(update.getCallbackQuery().getMessage().getChatId().toString())
+                            .replyMarkup(createReminderButtons())
                             .build());
                     break;
             }
