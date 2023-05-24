@@ -16,27 +16,27 @@ public class ButtonCreater {
 
     public static InlineKeyboardMarkup createCommonButtons() {
         List<InlineKeyboardButton> buttons = new ArrayList<>(Arrays.asList(
-                getInlineKeyboardButton("Отримати інфо", "1"),
-                getInlineKeyboardButton("Налаштування", "2")
+                getInlineKeyboardButton("Отримати інфо", "Info"),
+                getInlineKeyboardButton("Налаштування", "Settings")
         ));
         return getSingleInlineKeyboardMarkup(buttons);
     }
 
     public static InlineKeyboardMarkup createSettingsButtons() {
         List<InlineKeyboardButton> settingsButtons = new ArrayList<>(Arrays.asList(
-                getInlineKeyboardButton("Кількість знаків після коми", "3"),
-                getInlineKeyboardButton("Банк", "4"),
-                getInlineKeyboardButton("Валюти", "5"),
-                getInlineKeyboardButton("Час cповіщень", "6")
+                getInlineKeyboardButton("Кількість знаків після коми", "NumberOfDecimal"),
+                getInlineKeyboardButton("Банк", "Bank"),
+                getInlineKeyboardButton("Валюти", "Currencies"),
+                getInlineKeyboardButton("Час cповіщень", "Time")
         ));
         return getInlineKeyboardMarkup(getLists(settingsButtons));
     }
 
     public static InlineKeyboardMarkup createButtonsWithNumberOfDecimalPlaces() {
         List<InlineKeyboardButton> digitsButtons = new ArrayList<>(Arrays.asList(
-                getInlineKeyboardButton("2", "TwoDigitsAfterDot"),
-                getInlineKeyboardButton("3", "ThreeDigitsAfterDot"),
-                getInlineKeyboardButton("4", "FourDigitsAfterDot")
+                getInlineKeyboardButton("2", "2"),
+                getInlineKeyboardButton("3", "3"),
+                getInlineKeyboardButton("4", "4")
         ));
         return getInlineKeyboardMarkup(getLists(digitsButtons));
     }

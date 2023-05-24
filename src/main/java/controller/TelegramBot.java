@@ -3,19 +3,26 @@ package controller;
 import static constants.Constants.*;
 import static util.ButtonCreater.*;
 
+import dto.UsersSettings;
+import lombok.Getter;
 import lombok.SneakyThrows;
 import org.telegram.telegrambots.extensions.bots.commandbot.TelegramLongPollingCommandBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import services.commands.StartCommand;
 
-import static constants.Currencies.*;
+import java.util.stream.Collectors;
 
+import static constants.Currencies.*;
+@Getter
 public class TelegramBot extends TelegramLongPollingCommandBot {
+
+    private UsersSettings settings = new UsersSettings();
 
     public TelegramBot() {
         register(new StartCommand());
@@ -27,32 +34,36 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
         if (update.hasCallbackQuery()) {
             final CallbackQuery callbackQuery = update.getCallbackQuery();
             final String data = callbackQuery.getData();
+            final Message message = update.getCallbackQuery().getMessage();
+
+
 
             switch (data) {
-                case "1":
+                case "Info":
                     getInlineKeyboardMarkup(update, "Курс в ПриватБанк: USD/UAH \nПокупка: 36.56 \nПродажа: 37.45", createCommonButtons());
                     break;
-                case "2":
+                case "Settings":
                     getInlineKeyboardMarkup(update, "Налаштування", createSettingsButtons());
                     break;
-                case "3":
+                case "NumberOfDecimal":
                     getInlineKeyboardMarkup(update, "Оберіть кількість знаків після коми", createButtonsWithNumberOfDecimalPlaces());
                     break;
-                case "4":
+                case "Bank":
                     getInlineKeyboardMarkup(update, "Оберіть необхідний банк", createButtonsWithBanks());
                     break;
-                case "5":
+                case "Currencies":
                     getInlineKeyboardMarkup(update, "Оберіть необхідні валюти", createButtonsWithCurrencies());
                     break;
-                case "6":
+                case "Time":
                     getReplyKeyboardMarkup(update, "Оберіть час cповіщення", createReminderButtons());
                     break;
             }
 
-            if (data.equals("TwoDigitsAfterDot") || data.equals("ThreeDigitsAfterDot") || data.equals("FourDigitsAfterDot")) {
+            if (data.equals("2") || data.equals("3") || data.equals("4")) {
                 InlineKeyboardMarkup markup = createButtonsWithNumberOfDecimalPlaces();
                 handler(data, markup);
                 execute(getEditMessageReplyMarkup(markup, callbackQuery));
+                settings.setReminder(Integer.valueOf(data));
 
             } else if (data.equals(USD.name()) || data.equals(EUR.name()) || data.equals(GBP.name())) {
                 InlineKeyboardMarkup replyMarkup = callbackQuery.getMessage().getReplyMarkup();
@@ -74,7 +85,11 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                 InlineKeyboardMarkup markup = createButtonsWithBanks();
                 handler(data, markup);
                 execute(getEditMessageReplyMarkup(markup, callbackQuery));
+                settings.setBankMame(data);
+            } else if (data.replaceAll("[9 10 11 12 13 14 15 16 17 18 Вимкнути сповіщення]", "").length() == 0) {
+                settings.setReminder(Integer.valueOf(data));
             }
+
         }
     }
 
