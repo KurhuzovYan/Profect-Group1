@@ -78,6 +78,7 @@ public class ParserPrivatBank {
         List<CurrencyHolder> collect = currencies.stream()
                 .map(cur -> new CurrencyHolder(
                         cur.getSale(),
+                        0,
                         cur.getBuy(),
                         UAH,
                         Currencies.getByName(cur.getCcy())))

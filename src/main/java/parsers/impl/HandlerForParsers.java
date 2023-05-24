@@ -23,6 +23,7 @@ public class HandlerForParsers {
                             currency.getCurrency(),
                             currency.getBaseCurrency(),
                             currency.getSaleRateNB(),
+                            currency.getRateCross(),
                             currency.getPurchaseRateNB()))
                     .collect(Collectors.toList());
             currencies.add(current);
