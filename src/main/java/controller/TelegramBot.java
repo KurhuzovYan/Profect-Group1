@@ -51,12 +51,7 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
 
             if (data.equals("TwoDigitsAfterDot") || data.equals("ThreeDigitsAfterDot") || data.equals("FourDigitsAfterDot")) {
                 InlineKeyboardMarkup markup = createButtonsWithNumberOfDecimalPlaces();
-
-                markup.getKeyboard().forEach(buttons ->
-                        buttons.stream()
-                                .filter(button -> button.getCallbackData().equals(data))
-                                .forEach(button -> button.setText(button.getText() + " ✅")));
-
+                handler(data, markup);
                 execute(getEditMessageReplyMarkup(markup, callbackQuery));
 
             } else if (data.equals(USD.name()) || data.equals(EUR.name()) || data.equals(GBP.name())) {
@@ -74,19 +69,22 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                                 }));
 
                 execute(getEditMessageReplyMarkup(replyMarkup, callbackQuery));
+
             } else if (data.equals("ПриватБанк") || data.equals("Монобанк") || data.equals("НБУ")) {
                 InlineKeyboardMarkup markup = createButtonsWithBanks();
-
-                markup.getKeyboard().forEach(buttons ->
-                        buttons.stream()
-                                .filter(button -> button.getCallbackData().equals(data))
-                                .forEach(button -> button.setText(button.getText() + " ✅")));
-
+                handler(data, markup);
                 execute(getEditMessageReplyMarkup(markup, callbackQuery));
             }
         }
-
     }
+
+    private static void handler(String data, InlineKeyboardMarkup markup) {
+        markup.getKeyboard().forEach(buttons ->
+                buttons.stream()
+                        .filter(button -> button.getCallbackData().equals(data))
+                        .forEach(button -> button.setText(button.getText() + " ✅")));
+    }
+
     @SneakyThrows
     private void getInlineKeyboardMarkup(Update update, String text, InlineKeyboardMarkup markup) {
         execute(SendMessage.builder()
@@ -104,7 +102,6 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                 .replyMarkup(markup)
                 .build());
     }
-
 
     public static EditMessageReplyMarkup getEditMessageReplyMarkup(InlineKeyboardMarkup markup, CallbackQuery
             callbackQuery) {
