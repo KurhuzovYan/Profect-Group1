@@ -10,6 +10,7 @@ import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageRe
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import services.commands.StartCommand;
 
 import static constants.Currencies.*;
@@ -29,46 +30,22 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
 
             switch (data) {
                 case "1":
-                    execute(SendMessage.builder()
-                            .text("Курс в ПриватБанк: USD/UAH \nПокупка: 36.56 \nПродажа: 37.45")
-                            .chatId(update.getCallbackQuery().getMessage().getChatId().toString())
-                            .replyMarkup(createCommonButtons())
-                            .build());
+                    getInlineKeyboardMarkup(update, "Курс в ПриватБанк: USD/UAH \nПокупка: 36.56 \nПродажа: 37.45", createCommonButtons());
                     break;
                 case "2":
-                    execute(SendMessage.builder()
-                            .text("Налаштування")
-                            .chatId(update.getCallbackQuery().getMessage().getChatId().toString())
-                            .replyMarkup(createSettingsButtons())
-                            .build());
+                    getInlineKeyboardMarkup(update, "Налаштування", createSettingsButtons());
                     break;
                 case "3":
-                    execute(SendMessage.builder()
-                            .text("Оберіть кількість знаків після коми")
-                            .chatId(update.getCallbackQuery().getMessage().getChatId().toString())
-                            .replyMarkup(createButtonsWithNumberOfDecimalPlaces())
-                            .build());
+                    getInlineKeyboardMarkup(update, "Оберіть кількість знаків після коми", createButtonsWithNumberOfDecimalPlaces());
                     break;
                 case "4":
-                    execute(SendMessage.builder()
-                            .text("Оберіть необхідний банк")
-                            .chatId(update.getCallbackQuery().getMessage().getChatId().toString())
-                            .replyMarkup(createButtonsWithBanks())
-                            .build());
+                    getInlineKeyboardMarkup(update, "Оберіть необхідний банк", createButtonsWithBanks());
                     break;
                 case "5":
-                    execute(SendMessage.builder()
-                            .text("Оберіть необхідні валюти")
-                            .chatId(update.getCallbackQuery().getMessage().getChatId().toString())
-                            .replyMarkup(createButtonsWithCurrencies())
-                            .build());
+                    getInlineKeyboardMarkup(update, "Оберіть необхідні валюти", createButtonsWithCurrencies());
                     break;
                 case "6":
-                    execute(SendMessage.builder()
-                            .text("Оберіть час cповіщення")
-                            .chatId(update.getCallbackQuery().getMessage().getChatId().toString())
-                            .replyMarkup(createReminderButtons())
-                            .build());
+                    getReplyKeyboardMarkup(update, "Оберіть час cповіщення", createReminderButtons());
                     break;
             }
 
@@ -110,6 +87,24 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
         }
 
     }
+    @SneakyThrows
+    private void getInlineKeyboardMarkup(Update update, String text, InlineKeyboardMarkup markup) {
+        execute(SendMessage.builder()
+                .text(text)
+                .chatId(update.getCallbackQuery().getMessage().getChatId().toString())
+                .replyMarkup(markup)
+                .build());
+    }
+
+    @SneakyThrows
+    private void getReplyKeyboardMarkup(Update update, String text, ReplyKeyboardMarkup markup) {
+        execute(SendMessage.builder()
+                .text(text)
+                .chatId(update.getCallbackQuery().getMessage().getChatId().toString())
+                .replyMarkup(markup)
+                .build());
+    }
+
 
     public static EditMessageReplyMarkup getEditMessageReplyMarkup(InlineKeyboardMarkup markup, CallbackQuery
             callbackQuery) {
