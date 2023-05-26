@@ -3,29 +3,46 @@ package controller;
 import static constants.Constants.*;
 import static util.ButtonCreater.*;
 
+import constants.Currencies;
+import dto.CurrenciesPack;
+import dto.CurrencyForUser;
 import dto.UsersSettings;
-import lombok.Getter;
+import lombok.Data;
 import lombok.SneakyThrows;
 import org.telegram.telegrambots.extensions.bots.commandbot.TelegramLongPollingCommandBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
-import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import services.commands.StartCommand;
 
+
+import static parsers.ParserNBU.*;
+import static parsers.ParserMonobank.*;
+import static parsers.ParserPrivatBank.*;
+
+import java.io.FileWriter;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static constants.Currencies.*;
-@Getter
+
+@Data
 public class TelegramBot extends TelegramLongPollingCommandBot {
 
-    private UsersSettings settings = new UsersSettings();
+    private UsersSettings settings;
+    private boolean check;
 
     public TelegramBot() {
         register(new StartCommand());
+
+        String bankName = "ПриватБанк";
+        CurrencyForUser usd = getCurrencyForUser(bankName, USD);
+        CurrencyForUser eur = getCurrencyForUser(bankName, EUR);
+        settings = new UsersSettings(2, bankName, Set.of(usd, eur), 0);
+        check = true;
     }
 
     @Override
@@ -34,13 +51,33 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
         if (update.hasCallbackQuery()) {
             final CallbackQuery callbackQuery = update.getCallbackQuery();
             final String data = callbackQuery.getData();
-            final Message message = update.getCallbackQuery().getMessage();
-
+            List<String> allNamesOfCurrencies = settings.getCurrencies().stream()
+                    .map(currencyForUser -> currencyForUser.getCurrency().name())
+                    .collect(Collectors.toList());
+            List<CurrencyForUser> allUsers = settings.getCurrencies().stream()
+                    .collect(Collectors.toList());
 
 
             switch (data) {
                 case "Info":
-                    getInlineKeyboardMarkup(update, "Курс в ПриватБанк: USD/UAH \nПокупка: 36.56 \nПродажа: 37.45", createCommonButtons());
+                    if (allNamesOfCurrencies.size() == 1) {
+                        getInlineKeyboardMarkup(update, "Курс в " + settings.getBankMame() + ":" +
+                                "\n" + "\nВалютна пара: " + allNamesOfCurrencies.get(0) + "/UAH \nПокупка: " + allUsers.get(0).getBuy() + " \nКросс: " + allUsers.get(0).getCross() + " \nПродажа: " + allUsers.get(0).getSale(), createCommonButtons());
+                        check = true;
+                    } else if (allNamesOfCurrencies.size() == 2) {
+                        getInlineKeyboardMarkup(update, "Курс в " + settings.getBankMame() + ":" +
+                                "\n" + "\nВалютна пара: " + allNamesOfCurrencies.get(0) + "/UAH \nПокупка: " + allUsers.get(0).getBuy() + " \nКросс: " + allUsers.get(0).getCross() + " \nПродажа: " + allUsers.get(0).getSale() +
+                                "\n" + "\nВалютна пара: " + allNamesOfCurrencies.get(1) + "/UAH \nПокупка: " + allUsers.get(1).getBuy() + " \nКросс: " + allUsers.get(1).getCross() + " \nПродажа: " + allUsers.get(1).getSale(), createCommonButtons());
+                        check = true;
+                    } else {
+                        getInlineKeyboardMarkup(update, "Курс в " + settings.getBankMame() + ":" +
+                                "\n" + "\nВалютна пара: " + allNamesOfCurrencies.get(0) + "/UAH \nПокупка: " + allUsers.get(0).getBuy() + " \nКросс: " + allUsers.get(0).getCross() + " \nПродажа: " + allUsers.get(0).getSale() +
+                                "\n" + "\nВалютна пара: " + allNamesOfCurrencies.get(1) + "/UAH \nПокупка: " + allUsers.get(1).getBuy() + " \nКросс: " + allUsers.get(1).getCross() + " \nПродажа: " + allUsers.get(1).getSale() +
+                                "\n" + "\nВалютна пара: " + allNamesOfCurrencies.get(2) + "/UAH \nПокупка: " + allUsers.get(2).getBuy() + " \nКросс: " + allUsers.get(2).getCross() + " \nПродажа: " + allUsers.get(2).getSale(), createCommonButtons());
+                        check = true;
+                    }
+
+
                     break;
                 case "Settings":
                     getInlineKeyboardMarkup(update, "Налаштування", createSettingsButtons());
@@ -63,9 +100,22 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                 InlineKeyboardMarkup markup = createButtonsWithNumberOfDecimalPlaces();
                 handler(data, markup);
                 execute(getEditMessageReplyMarkup(markup, callbackQuery));
-                settings.setReminder(Integer.valueOf(data));
+
+                String current = markup.getKeyboard().stream()
+                        .flatMap(buttons -> buttons.stream()
+                                .filter(button -> button.getText().equals(data + " ✅"))
+                                .map(button -> button.getText().replaceAll(" ✅", "")))
+                        .collect(Collectors.joining());
+
+                settings.setNumberOfDecimal(Integer.valueOf(current));
 
             } else if (data.equals(USD.name()) || data.equals(EUR.name()) || data.equals(GBP.name())) {
+                if (check) {
+                    Set<CurrencyForUser> newSet = new HashSet<>();
+                    settings.setCurrencies(newSet);
+                    check = false;
+                }
+
                 InlineKeyboardMarkup replyMarkup = callbackQuery.getMessage().getReplyMarkup();
 
                 replyMarkup.getKeyboard().forEach(buttons ->
@@ -79,18 +129,67 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                                     }
                                 }));
 
+                CurrencyForUser current = getCurrencyForUser(settings.getBankMame(), getByName(data));
+
+                boolean matcher = settings.getCurrencies().stream()
+                        .allMatch(currencies -> !currencies.getCurrency().name().equals(data));
+
+
+                if (matcher) settings.getCurrencies().add(current);
+                else settings.getCurrencies().remove(current);
+
                 execute(getEditMessageReplyMarkup(replyMarkup, callbackQuery));
+
 
             } else if (data.equals("ПриватБанк") || data.equals("Монобанк") || data.equals("НБУ")) {
                 InlineKeyboardMarkup markup = createButtonsWithBanks();
                 handler(data, markup);
                 execute(getEditMessageReplyMarkup(markup, callbackQuery));
                 settings.setBankMame(data);
-            } else if (data.replaceAll("[9 10 11 12 13 14 15 16 17 18 Вимкнути сповіщення]", "").length() == 0) {
-                settings.setReminder(Integer.valueOf(data));
-            }
 
+            }
         }
+            settings.setReminder(Integer.valueOf(update.getMessage().getText()));
+        if (update.getMessage().hasText()){
+            SendMessage message = new SendMessage();
+
+            message.setText("Очікуйте повідомлення з обранними налаштуваннями: \n" +
+                    "\nКількість знаків після коми: " + settings.getNumberOfDecimal() +
+                    "\nБанк: " + settings.getBankMame() +
+                    "\nНеобхідні валюти: " + settings.getCurrencies() +
+                    "\nЧас cповіщення: " + settings.getReminder() + ":00\n" +
+                    "\nЩоб отримати інформацию одразу, написніть:\n \"Отримати інфо\" \uD83D\uDC47");
+            message.setChatId(update.getMessage().getChatId());
+            message.setReplyMarkup(createCommonButtons());
+
+            execute(message);
+        }
+
+        try (FileWriter writer = new FileWriter("users/Entity-" + update.getMessage().getFrom().getUserName() + ".json")) {
+            writer.write(GSON.toJson(settings));
+        }
+    }
+
+    private CurrencyForUser getCurrencyForUser(String bankName, Currencies currencies) {
+        List<CurrenciesPack> currentPack = Arrays.asList(getCurrencyFromPrivatBank(), getCurrencyFromNBU(), getCurrencyFromMono()).stream()
+                .filter(pack -> pack.getBankName().equals(bankName))
+                .collect(Collectors.toList());
+
+        List<List<Double>> collect = currentPack.stream()
+                .flatMap(pack -> pack.getCurrencies().stream()
+                        .filter(holder -> holder.getCurrency().equals(currencies))
+                        .map(cur -> List.of(cur.getSaleRateNB(), cur.getRateCross(), cur.getPurchaseRateNB())))
+                .collect(Collectors.toList());
+        List<Double> doubles = collect.get(0);
+
+        CurrencyForUser currencyForUser = new CurrencyForUser(bankName,
+                currencies,
+                UAH,
+                doubles.get(0),
+                doubles.get(1),
+                doubles.get(2));
+        return currencyForUser;
+
     }
 
     private static void handler(String data, InlineKeyboardMarkup markup) {
