@@ -8,25 +8,21 @@ import java.util.Date;
 @Data
 public class CurrencyHolder {
     private Date currencyDate;
-    private double  saleRateNB, rateCross, purchaseRateNB;
-    private Currencies baseCurrency, currency;
+    private String bankName;
+    private Currencies currency, baseCurrency;
+    private double buy, cross, sale;
 
 
-    public CurrencyHolder(Date currencyDate, double saleRateNB, double rateCross, double purchaseRateNB, Currencies baseCurrency, Currencies currency) {
+    public CurrencyHolder(Date currencyDate, String bankName, Currencies currency, Currencies baseCurrency, double buy, double cross, double sale) {
         this.currencyDate = currencyDate;
-        this.saleRateNB = saleRateNB;
-        this.rateCross = rateCross;
-        this.purchaseRateNB = purchaseRateNB;
-        this.baseCurrency = baseCurrency;
+        this.bankName = bankName;
         this.currency = currency;
-    }
-    public CurrencyHolder(double saleRateNB, double rateCross, double purchaseRateNB, Currencies baseCurrency, Currencies currency) {
-        this.saleRateNB = saleRateNB;
-        this.rateCross = rateCross;
-        this.purchaseRateNB = purchaseRateNB;
         this.baseCurrency = baseCurrency;
-        this.currency = currency;
+        this.buy = buy;
+        this.cross = cross;
+        this.sale = sale;
     }
+
     @Override
     public String toString() {
         return String.valueOf(currency) + "/UAH";

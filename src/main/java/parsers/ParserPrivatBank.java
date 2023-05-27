@@ -77,11 +77,13 @@ public class ParserPrivatBank {
 
         List<CurrencyHolder> collect = currencies.stream()
                 .map(cur -> new CurrencyHolder(
-                        cur.getSale(),
-                        0,
-                        cur.getBuy(),
+                        date,
+                        "ПриватБанк",
+                        Currencies.getByName(cur.getCcy()),
                         UAH,
-                        Currencies.getByName(cur.getCcy())))
+                        cur.getBuy(),
+                        0,
+                        cur.getSale()))
                 .collect(Collectors.toList());
         pack.setCurrencies(collect);
 

@@ -5,7 +5,7 @@ import static util.ButtonCreater.*;
 
 import constants.Currencies;
 import dto.CurrenciesPack;
-import dto.CurrencyForUser;
+import dto.CurrencyHolder;
 import dto.UsersSettings;
 import lombok.Data;
 import lombok.SneakyThrows;
@@ -34,13 +34,15 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
 
     private UsersSettings settings;
     private boolean check;
+    private static CurrenciesPack pack;
+    private static Date date = new Date();
 
     public TelegramBot() {
         register(new StartCommand());
 
         String defaultBank = "ПриватБанк";
-        CurrencyForUser defaultCurrency1 = getCurrencyForUser(defaultBank, USD);
-        CurrencyForUser defaultCurrency2 = getCurrencyForUser(defaultBank, EUR);
+        CurrencyHolder defaultCurrency1 = getCurrencyHolder(defaultBank, USD);
+        CurrencyHolder defaultCurrency2 = getCurrencyHolder(defaultBank, EUR);
         settings = new UsersSettings(2, defaultBank, Set.of(defaultCurrency1, defaultCurrency2), "9");
         check = true;
     }
@@ -55,9 +57,9 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
             switch (data) {
                 case "Info":
                     String defaultReminder = settings.getReminder().equals("Вимкнути оповіщення") ?
-                            "\n\nОповіщення: викл." : "\n\nОповіщення о " + settings.getReminder() + ":00";
+                            "\n\nЩоденне сповіщення: викл." : "\n\nЩоденне сповіщення о " + settings.getReminder() + ":00";
 
-                    List<CurrencyForUser> allUsers = settings.getCurrencies().stream()
+                    List<CurrencyHolder> allUsers = settings.getCurrencies().stream()
                             .collect(Collectors.toList());
 
                     Double[] courses = allUsers.stream()
@@ -68,9 +70,9 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                     StringBuilder resultBuilder = new StringBuilder();
 
                     for (int i = 0; i < settings.getCurrencies().size(); i++) {
-                        String buy = courses[i * 3] != 0 ? "\nПокупка: " + String.format("%." + settings.getNumberOfDecimal() + "f", allUsers.get(i).getBuy()) : "";
-                        String cross = courses[i * 3 + 1] != 0 ? "\nКросс: " + String.format("%." + settings.getNumberOfDecimal() + "f", allUsers.get(i).getCross()) : "";
-                        String sale = courses[i * 3 + 2] != 0 ? "\nПродажа: " + String.format("%." + settings.getNumberOfDecimal() + "f", allUsers.get(i).getSale()) : "";
+                        String buy = courses[i * 3] != 0 ? "\nКупівля : " + String.format("%." + settings.getNumberOfDecimal() + "f", allUsers.get(i).getBuy()) : "";
+                        String cross = courses[i * 3 + 1] != 0 ? "\nКрос: " + String.format("%." + settings.getNumberOfDecimal() + "f", allUsers.get(i).getCross()) : "";
+                        String sale = courses[i * 3 + 2] != 0 ? "\nПродаж: " + String.format("%." + settings.getNumberOfDecimal() + "f", allUsers.get(i).getSale()) : "";
 
                         resultBuilder.append("\n\nВалютна пара: ")
                                 .append(allUsers.get(i).getCurrency().name())
@@ -96,7 +98,7 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                     getInlineKeyboardMarkup(update, "Оберіть необхідні валюти", createButtonsWithCurrencies());
                     break;
                 case "Time":
-                    getReplyKeyboardMarkup(update, "Оберіть час оповіщення", createReminderButtons());
+                    getReplyKeyboardMarkup(update, "Оберіть час щоденного сповіщення", createReminderButtons());
                     break;
             }
 
@@ -115,7 +117,7 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
 
             } else if (data.equals(USD.name()) || data.equals(EUR.name()) || data.equals(GBP.name())) {
                 if (check) {
-                    Set<CurrencyForUser> newSet = new HashSet<>();
+                    Set<CurrencyHolder> newSet = new HashSet<>();
                     settings.setCurrencies(newSet);
                     check = false;
                 }
@@ -133,7 +135,7 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                                     }
                                 }));
 
-                CurrencyForUser current = getCurrencyForUser(settings.getBankMame(), getByName(data));
+                CurrencyHolder current = getCurrencyHolder(settings.getBankMame(), getByName(data));
 
                 boolean matcher = settings.getCurrencies().stream()
                         .allMatch(currencies -> !currencies.getCurrency().name().equals(data));
@@ -149,10 +151,10 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                 execute(getEditMessageReplyMarkup(markup, callbackQuery));
                 settings.setBankMame(data);
 
-                Set<CurrencyForUser> updatedCurrencies = settings.getCurrencies().stream()
+                Set<CurrencyHolder> updatedCurrencies = settings.getCurrencies().stream()
                         .map(cur -> {
                             cur.setBankName(data);
-                            return getCurrencyForUser(data, cur.getCurrency());
+                            return getCurrencyHolder(data, cur.getCurrency());
                         })
                         .collect(Collectors.toSet());
 
@@ -161,7 +163,7 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
         } else if (update.getMessage().hasText()) {
             settings.setReminder(update.getMessage().getText());
             String updateReminder = settings.getReminder().equals("Вимкнути оповіщення") ?
-                    "\nОповіщення: викл." : "\nОповіщення о " + settings.getReminder() + ":00";
+                    "\nЩоденне сповіщення: викл." : "\nЩоденне сповіщення о " + settings.getReminder() + ":00";
 
             execute(SendMessage.builder()
                     .text("Очікуйте повідомлення з обранними налаштуваннями: \n" +
@@ -179,25 +181,26 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
         }
     }
 
-    private CurrencyForUser getCurrencyForUser(String bankName, Currencies currencies) {
+    private CurrencyHolder getCurrencyHolder(String bankName, Currencies currencies) {
         List<CurrenciesPack> currentPack = Arrays.asList(getCurrencyFromPrivatBank(), getCurrencyFromNBU(), getCurrencyFromMono()).stream()
                 .filter(pack -> pack.getBankName().equals(bankName))
                 .collect(Collectors.toList());
 
-        CurrencyForUser currencyForUser = currentPack.stream()
+        CurrencyHolder currencyHolder = currentPack.stream()
                 .flatMap(pack -> pack.getCurrencies().stream())
                 .filter(holder -> holder.getCurrency().equals(currencies))
-                .map(cur -> new CurrencyForUser(
+                .map(cur -> new CurrencyHolder(
+                        date,
                         bankName,
                         currencies,
                         UAH,
-                        cur.getSaleRateNB(),
-                        cur.getRateCross(),
-                        cur.getPurchaseRateNB()))
+                        cur.getBuy(),
+                        cur.getCross(),
+                        cur.getSale()))
                 .findFirst()
                 .orElse(null);
 
-        return currencyForUser;
+        return currencyHolder;
     }
 
     private static void handler(String data, InlineKeyboardMarkup markup) {
