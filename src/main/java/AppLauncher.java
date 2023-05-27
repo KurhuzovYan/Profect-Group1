@@ -6,7 +6,7 @@ public class AppLauncher {
     public static void main(String[] args) {
       
         TelegramBotService bot = new TelegramBotService();
-        System.out.println(new UsersSettings());
+//        System.out.println(new UsersSettings());
 
     }
 

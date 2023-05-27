@@ -27,4 +27,8 @@ public class CurrencyHolder {
         this.baseCurrency = baseCurrency;
         this.currency = currency;
     }
+    @Override
+    public String toString() {
+        return String.valueOf(currency) + "/UAH";
+    }
 }

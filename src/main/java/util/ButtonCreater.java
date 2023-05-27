@@ -27,7 +27,7 @@ public class ButtonCreater {
                 getInlineKeyboardButton("Кількість знаків після коми", "NumberOfDecimal"),
                 getInlineKeyboardButton("Банк", "Bank"),
                 getInlineKeyboardButton("Валюти", "Currencies"),
-                getInlineKeyboardButton("Час cповіщень", "Time")
+                getInlineKeyboardButton("Час оповіщень", "Time")
         ));
         return getInlineKeyboardMarkup(getLists(settingsButtons));
     }
@@ -60,7 +60,7 @@ public class ButtonCreater {
     }
 
     public static ReplyKeyboardMarkup createReminderButtons() {
-        List<KeyboardButton> listOfButtons = List.of("9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "Вимкнути сповіщення").stream()
+        List<KeyboardButton> listOfButtons = List.of("9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "Вимкнути оповіщення").stream()
                 .map(button -> new KeyboardButton(button))
                 .collect(Collectors.toList());
 
