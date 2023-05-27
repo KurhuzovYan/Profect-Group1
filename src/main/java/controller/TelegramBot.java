@@ -32,7 +32,8 @@ import static constants.Currencies.*;
 @Data
 public class TelegramBot extends TelegramLongPollingCommandBot {
 
-    private UsersSettings settings;
+    private Map<Long, UsersSettings> settings;
+    private UsersSettings defaultSettings;
     private boolean check;
     private static CurrenciesPack pack;
     private static Date date = new Date();
@@ -43,23 +44,39 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
         String defaultBank = "ПриватБанк";
         CurrencyHolder defaultCurrency1 = getCurrencyHolder(defaultBank, USD);
         CurrencyHolder defaultCurrency2 = getCurrencyHolder(defaultBank, EUR);
-        settings = new UsersSettings(2, defaultBank, Set.of(defaultCurrency1, defaultCurrency2), "9");
+        defaultSettings = new UsersSettings(0, 2, defaultBank, Set.of(defaultCurrency1, defaultCurrency2), "9");
+        settings = new HashMap();
+        settings.put(0L, defaultSettings);
         check = true;
     }
 
     @Override
     @SneakyThrows
     public void processNonCommandUpdate(Update update) {
+
         if (update.hasCallbackQuery()) {
+            Long chatId = update.getCallbackQuery().getFrom().getId();
             final CallbackQuery callbackQuery = update.getCallbackQuery();
             final String data = callbackQuery.getData();
 
+
+            if (settings.containsKey(0L)) {
+                settings.clear();
+                settings.put(chatId, new UsersSettings(0, 2, getDefaultSettings().getBankMame(),
+                        getDefaultSettings().getCurrencies(), "9"));
+                settings.get(chatId).setChatId(chatId);
+            } else if (!settings.containsKey(chatId)) {
+                settings.put(chatId, new UsersSettings(0, 2, getDefaultSettings().getBankMame(),
+                        getDefaultSettings().getCurrencies(), "9"));
+                settings.get(chatId).setChatId(chatId);
+            }
+
             switch (data) {
                 case "Info":
-                    String defaultReminder = settings.getReminder().equals("Вимкнути оповіщення") ?
-                            "\n\nЩоденне сповіщення: викл." : "\n\nЩоденне сповіщення о " + settings.getReminder() + ":00";
+                    String defaultReminder = settings.get(chatId).getReminder().equals("Вимкнути оповіщення") ?
+                            "\n\nЩоденне сповіщення: викл." : "\n\nЩоденне сповіщення о " + settings.get(chatId).getReminder() + ":00";
 
-                    List<CurrencyHolder> allUsers = settings.getCurrencies().stream()
+                    List<CurrencyHolder> allUsers = settings.get(chatId).getCurrencies().stream()
                             .collect(Collectors.toList());
 
                     Double[] courses = allUsers.stream()
@@ -69,10 +86,10 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
 
                     StringBuilder resultBuilder = new StringBuilder();
 
-                    for (int i = 0; i < settings.getCurrencies().size(); i++) {
-                        String buy = courses[i * 3] != 0 ? "\nКупівля : " + String.format("%." + settings.getNumberOfDecimal() + "f", allUsers.get(i).getBuy()) : "";
-                        String cross = courses[i * 3 + 1] != 0 ? "\nКрос: " + String.format("%." + settings.getNumberOfDecimal() + "f", allUsers.get(i).getCross()) : "";
-                        String sale = courses[i * 3 + 2] != 0 ? "\nПродаж: " + String.format("%." + settings.getNumberOfDecimal() + "f", allUsers.get(i).getSale()) : "";
+                    for (int i = 0; i < settings.get(chatId).getCurrencies().size(); i++) {
+                        String buy = courses[i * 3] != 0 ? "\nКупівля : " + String.format("%." + settings.get(chatId).getNumberOfDecimal() + "f", allUsers.get(i).getBuy()) : "";
+                        String cross = courses[i * 3 + 1] != 0 ? "\nКрос: " + String.format("%." + settings.get(chatId).getNumberOfDecimal() + "f", allUsers.get(i).getCross()) : "";
+                        String sale = courses[i * 3 + 2] != 0 ? "\nПродаж: " + String.format("%." + settings.get(chatId).getNumberOfDecimal() + "f", allUsers.get(i).getSale()) : "";
 
                         resultBuilder.append("\n\nВалютна пара: ")
                                 .append(allUsers.get(i).getCurrency().name())
@@ -82,7 +99,7 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                                 .append(sale);
                     }
 
-                    getInlineKeyboardMarkup(update, "Курс в " + settings.getBankMame() + resultBuilder + defaultReminder, createCommonButtons());
+                    getInlineKeyboardMarkup(update, "Курс в " + settings.get(chatId).getBankMame() + resultBuilder + defaultReminder, createCommonButtons());
                     break;
                 case "Settings":
                     getInlineKeyboardMarkup(update, "Налаштування", createSettingsButtons());
@@ -113,12 +130,18 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                                 .map(button -> button.getText().replaceAll(" ✅", "")))
                         .collect(Collectors.joining());
 
-                settings.setNumberOfDecimal(Integer.valueOf(current));
+
+                for (Map.Entry<Long, UsersSettings> longUsersSettingsEntry : settings.entrySet()) {
+                    UsersSettings value = longUsersSettingsEntry.getValue();
+                    if (value.getChatId() == chatId) {
+                        value.setNumberOfDecimal(Integer.valueOf(current));
+                    }
+                }
 
             } else if (data.equals(USD.name()) || data.equals(EUR.name()) || data.equals(GBP.name())) {
                 if (check) {
                     Set<CurrencyHolder> newSet = new HashSet<>();
-                    settings.setCurrencies(newSet);
+                    settings.get(chatId).setCurrencies(newSet);
                     check = false;
                 }
 
@@ -135,13 +158,35 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                                     }
                                 }));
 
-                CurrencyHolder current = getCurrencyHolder(settings.getBankMame(), getByName(data));
+                for (Map.Entry<Long, UsersSettings> longUsersSettingsEntry : settings.entrySet()) {
+                    if (longUsersSettingsEntry.getValue().getCurrencies().size() == 0) {
+                        CurrencyHolder current = getCurrencyHolder(settings.get(chatId).getBankMame(), getByName(data));
 
-                boolean matcher = settings.getCurrencies().stream()
-                        .allMatch(currencies -> !currencies.getCurrency().name().equals(data));
+                        boolean matcher = settings.get(chatId).getCurrencies().stream()
+                                .allMatch(currencies -> !currencies.getCurrency().name().equals(data));
 
-                if (matcher) settings.getCurrencies().add(current);
-                else settings.getCurrencies().remove(current);
+                        if (matcher) settings.get(chatId).getCurrencies().add(current);
+                        else settings.get(chatId).getCurrencies().remove(current);
+                    } else {
+                        for (CurrencyHolder currency : longUsersSettingsEntry.getValue().getCurrencies()) {
+                            CurrencyHolder current = getCurrencyHolder(settings.get(chatId).getBankMame(), getByName(data));
+
+//                            boolean matcher = settings.get(chatId).getCurrencies().stream()
+//                                    .allMatch(currencies -> !currencies.getCurrency().name().equals(data));
+
+                            if (!currency.equals(current)) {
+                                settings.get(chatId).getCurrencies().add(current);
+                                break;
+                            } else {
+                                settings.get(chatId).getCurrencies().remove(current);
+                            }
+
+                        }
+                    }
+
+
+                }
+
 
                 execute(getEditMessageReplyMarkup(replyMarkup, callbackQuery));
 
@@ -149,36 +194,62 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                 InlineKeyboardMarkup markup = createButtonsWithBanks();
                 handler(data, markup);
                 execute(getEditMessageReplyMarkup(markup, callbackQuery));
-                settings.setBankMame(data);
+                settings.get(chatId).setBankMame(data);
 
-                Set<CurrencyHolder> updatedCurrencies = settings.getCurrencies().stream()
+                Set<CurrencyHolder> updatedCurrencies = settings.get(chatId).getCurrencies().stream()
                         .map(cur -> {
                             cur.setBankName(data);
                             return getCurrencyHolder(data, cur.getCurrency());
                         })
                         .collect(Collectors.toSet());
 
-                settings.setCurrencies(updatedCurrencies);
+                for (Map.Entry<Long, UsersSettings> longUsersSettingsEntry : settings.entrySet()) {
+                    UsersSettings value = longUsersSettingsEntry.getValue();
+                    if (value.getChatId() == chatId) {
+                        settings.get(chatId).setCurrencies(updatedCurrencies);
+                    }
+                }
             }
         } else if (update.getMessage().hasText()) {
-            settings.setReminder(update.getMessage().getText());
-            String updateReminder = settings.getReminder().equals("Вимкнути оповіщення") ?
-                    "\nЩоденне сповіщення: викл." : "\nЩоденне сповіщення о " + settings.getReminder() + ":00";
+            Long chatId1 = update.getMessage().getChat().getId();
+
+            if (settings.containsKey(0L)) {
+                settings.clear();
+                settings.put(chatId1, new UsersSettings(0, 2, getDefaultSettings().getBankMame(),
+                        getDefaultSettings().getCurrencies(), "9"));
+                settings.get(chatId1).setChatId(chatId1);
+            } else if (!settings.containsKey(chatId1)) {
+                settings.put(chatId1, new UsersSettings(0, 2, getDefaultSettings().getBankMame(),
+                        getDefaultSettings().getCurrencies(), "9"));
+                settings.get(chatId1).setChatId(chatId1);
+            }
+
+            for (Map.Entry<Long, UsersSettings> longUsersSettingsEntry : settings.entrySet()) {
+                UsersSettings value = longUsersSettingsEntry.getValue();
+                if (value.getChatId() == chatId1) {
+                    settings.get(chatId1).setReminder(update.getMessage().getText());
+                    break;
+                }
+            }
+            String updateReminder = settings.get(chatId1).getReminder().equals("Вимкнути оповіщення") ?
+                    "\nЩоденне сповіщення: викл." : "\nЩоденне сповіщення о " + settings.get(chatId1).getReminder() + ":00";
 
             execute(SendMessage.builder()
                     .text("Очікуйте повідомлення з обранними налаштуваннями: \n" +
-                            "\nКількість знаків після коми: " + settings.getNumberOfDecimal() +
-                            "\nБанк: " + settings.getBankMame() +
-                            "\nНеобхідні валюти: " + settings.getCurrencies() + updateReminder +
+                            "\nКількість знаків після коми: " + settings.get(chatId1).getNumberOfDecimal() +
+                            "\nБанк: " + settings.get(chatId1).getBankMame() +
+                            "\nНеобхідні валюти: " + settings.get(chatId1).getCurrencies() + updateReminder +
                             "\n\nЩоб отримати інформацію одразу, написніть:\n \"Отримати інфо\" \uD83D\uDC47")
-                    .chatId(update.getMessage().getChatId())
+                    .chatId(update.getMessage().getChatId().toString())
                     .replyMarkup(createCommonButtons())
                     .build());
         }
 
-        try (FileWriter writer = new FileWriter("users/Entity-" + update.getMessage().getFrom().getUserName() + ".json")) {
+        try (FileWriter writer = new FileWriter("entities.json")) {
             writer.write(GSON.toJson(settings));
+            writer.flush();
         }
+
     }
 
     private CurrencyHolder getCurrencyHolder(String bankName, Currencies currencies) {

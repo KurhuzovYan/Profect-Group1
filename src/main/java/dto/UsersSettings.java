@@ -5,12 +5,14 @@ import lombok.Data;
 import java.util.*;
 @Data
 public class UsersSettings {
+    private long chatId;
     private int numberOfDecimal;
     private String bankMame;
     private Set<CurrencyHolder> currencies = new HashSet<>();
     private String reminder;
 
-    public UsersSettings(int numberOfDecimal, String bankMame, Set<CurrencyHolder> currencies, String reminder) {
+    public UsersSettings(long chatId, int numberOfDecimal, String bankMame, Set<CurrencyHolder> currencies, String reminder) {
+        this.chatId = chatId;
         this.numberOfDecimal = numberOfDecimal;
         this.bankMame = bankMame;
         this.currencies = currencies;
