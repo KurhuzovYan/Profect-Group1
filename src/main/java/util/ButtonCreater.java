@@ -1,18 +1,25 @@
 package util;
 
+
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
+import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+
 
 import static constants.Currencies.*;
+
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 
-public class ButtonCreater {
+public class ButtonCreater extends TelegramLongPollingBot {
 
     public static InlineKeyboardMarkup createCommonButtons() {
         List<InlineKeyboardButton> buttons = new ArrayList<>(Arrays.asList(
@@ -109,5 +116,37 @@ public class ButtonCreater {
                 .text(textOfButton)
                 .callbackData(callbackData)
                 .build();
+    }
+
+    @Override
+    public String getBotUsername() {
+        return "Group1ExchangeRatesBot";
+    }
+
+    @Override
+    public String getBotToken() {
+        return "6078623462:AAFAG54arlBUkvzNbuuSFj7O7ipKkncj8v0";
+    }
+
+    @Override
+    public void onUpdateReceived(Update update) {
+        if (update.hasCallbackQuery()) {
+            String callbackData = update.getCallbackQuery().getData();
+            if (callbackData.equals("DisableNotification")) {
+                disableNotification(update.getCallbackQuery().getMessage().getChatId());
+            }
+        }
+    }
+
+    private void disableNotification(long chatId) {
+        SendMessage disableNotificationMessage = new SendMessage();
+        disableNotificationMessage.setChatId(String.valueOf(chatId));
+        disableNotificationMessage.setText("Повідомлення вимкнуто");
+
+        try {
+            execute(disableNotificationMessage);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
     }
 }
