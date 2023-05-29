@@ -1,11 +1,9 @@
 package controller;
 
-import static constants.Constants.*;
-import static util.ButtonCreater.*;
-
 import constants.Currencies;
 import dto.CurrenciesPack;
 import dto.CurrencyHolder;
+import dto.UserSettings;
 import dto.UsersSettings;
 import lombok.Data;
 import lombok.SneakyThrows;
@@ -17,34 +15,51 @@ import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import services.commands.StartCommand;
-
-
-import static parsers.ParserNBU.*;
-import static parsers.ParserMonobank.*;
-import static parsers.ParserPrivatBank.*;
 
 import java.io.FileWriter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static constants.Constants.*;
 import static constants.Currencies.*;
+import static parsers.ParserMonobank.getCurrencyFromMono;
+import static parsers.ParserNBU.getCurrencyFromNBU;
+import static parsers.ParserPrivatBank.getCurrencyFromPrivatBank;
+import static util.ButtonCreater.*;
 
 @Data
 public class TelegramBot extends TelegramLongPollingCommandBot {
 
-    private Map<Long, UsersSettings> settings;
-    private Map<Long, Boolean> check;
-    private UsersSettings defaultSettings;
     private static CurrenciesPack pack;
     private static Date date;
+    private Map<Long, UserSettings> settings;
+    private Map<Long, Boolean> check;
+    private UsersSettings defaultSettings;
 
     public TelegramBot() {
         register(new StartCommand());
 
         date = new Date();
-        settings = new HashMap();
+        settings = UsersSettings.settings;
         check = new HashMap<>();
+    }
+
+    private static void handler(String data, InlineKeyboardMarkup markup) {
+        markup.getKeyboard().forEach(buttons ->
+                buttons.stream()
+                        .filter(button -> button.getCallbackData().equals(data))
+                        .forEach(button -> button.setText(button.getText() + " ✅")));
+    }
+
+    public static EditMessageReplyMarkup getEditMessageReplyMarkup(InlineKeyboardMarkup markup, CallbackQuery
+            callbackQuery) {
+        return EditMessageReplyMarkup.builder()
+                .chatId(callbackQuery.getMessage().getChatId().toString())
+                .messageId(callbackQuery.getMessage().getMessageId())
+                .replyMarkup(markup)
+                .build();
     }
 
     @Override
@@ -55,14 +70,14 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
             final CallbackQuery callbackQuery = update.getCallbackQuery();
             final String data = callbackQuery.getData();
 
-          if (!settings.containsKey(idFromCallbackQuery)) {
-              createUserWithDefaultSettings(idFromCallbackQuery);
-          }
+            if (!settings.containsKey(idFromCallbackQuery)) {
+                createUserWithDefaultSettings(idFromCallbackQuery);
+            }
 
             switch (data) {
                 case "Info":
-                    String defaultReminder = settings.get(idFromCallbackQuery).getReminder().equals("Вимкнути оповіщення") ?
-                            "\n\nЩоденне сповіщення: викл." : "\n\nЩоденне сповіщення о " + settings.get(idFromCallbackQuery).getReminder() + ":00";
+                    String defaultReminder = settings.get(idFromCallbackQuery).getReminder().equals("викл.") ?
+                            "\n\nЩоденне оповіщення: викл." : "\n\nЩоденне оповіщення о " + settings.get(idFromCallbackQuery).getReminder() + ":00";
 
                     List<CurrencyHolder> allUsers = settings.get(idFromCallbackQuery).getCurrencies().stream()
                             .collect(Collectors.toList());
@@ -99,9 +114,10 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                     break;
                 case "Currencies":
                     getInlineKeyboardMarkup(update, "Оберіть необхідні валюти", createButtonsWithCurrencies());
+                    check.put(idFromCallbackQuery, true);
                     break;
                 case "Time":
-                    getReplyKeyboardMarkup(update, "Оберіть час щоденного сповіщення", createReminderButtons());
+                    getReplyKeyboardMarkup(update, "Оберіть час щоденного оповіщення", createReminderButtons());
                     break;
                 case "Confirm":
                     execute(DeleteMessage.builder()
@@ -186,33 +202,46 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
 
         } else if (update.getMessage().hasText()) {
             Long idFromUpdateMessage = update.getMessage().getChat().getId();
+            String textFromMessage = update.getMessage().getText();
 
-            if (!settings.containsKey(idFromUpdateMessage)) {
-                createUserWithDefaultSettings(idFromUpdateMessage);
+            for (String time : List.of("9", "10", "11", "12", "13", "14", "15", "16", "17", "18")) {
+                if (time.equals(textFromMessage)) {
+
+                    if (!settings.containsKey(idFromUpdateMessage)) {
+                        createUserWithDefaultSettings(idFromUpdateMessage);
+                    }
+
+                    settings.entrySet().stream()
+                            .filter(entry -> entry.getValue().getChatId() == idFromUpdateMessage)
+                            .forEach(entry -> entry.getValue().setReminder(textFromMessage));
+
+                    getMessageWithFinalSettings(update, idFromUpdateMessage, "\nЩоденне оповіщення о " + settings.get(idFromUpdateMessage).getReminder() + ":00");
+                    break;
+                }
             }
-
-            settings.entrySet().stream()
-                    .filter(entry -> entry.getValue().getChatId() == idFromUpdateMessage)
-                    .forEach(entry -> entry.getValue().setReminder(update.getMessage().getText()));
-
-            String updateReminder = settings.get(idFromUpdateMessage).getReminder().equals("Вимкнути оповіщення") ?
-                    "\nЩоденне сповіщення: викл." : "\nЩоденне сповіщення о " + settings.get(idFromUpdateMessage).getReminder() + ":00";
-
-            execute(SendMessage.builder()
-                    .text("Очікуйте повідомлення з обранними налаштуваннями: \n" +
-                            "\nКількість знаків після коми: " + settings.get(idFromUpdateMessage).getNumberOfDecimal() +
-                            "\nБанк: " + settings.get(idFromUpdateMessage).getBankMame() +
-                            "\nНеобхідні валюти: " + settings.get(idFromUpdateMessage).getCurrencies() + updateReminder +
-                            "\n\nЩоб отримати інформацію одразу, написніть:\n \"Отримати інфо\" \uD83D\uDC47")
-                    .chatId(update.getMessage().getChatId().toString())
-                    .replyMarkup(createCommonButtons())
-                    .build());
-
+            if (textFromMessage.equals("Вимкнути оповіщення")) {
+                getMessageWithFinalSettings(update, idFromUpdateMessage, "\nЩоденне оповіщення: викл.");
+                settings.get(idFromUpdateMessage).setReminder("викл.");
+            }
         }
-            try (FileWriter writer = new FileWriter("entities.json")) {
+        try (FileWriter writer = new FileWriter("entities.json")) {
             writer.write(GSON.toJson(settings));
             writer.flush();
         }
+    }
+
+    @SneakyThrows
+    public void getMessageWithFinalSettings(Update update, Long idFromUpdateMessage, String message) {
+        execute(SendMessage.builder()
+                .text("Дякуємо!\nВаші налаштування прийняті \uD83D\uDE4C\uD83C\uDFFB " +
+                        "\nОчікуйте повідомлення з актуальною інформацією:" +
+                        "\n\nКількість знаків після коми: " + settings.get(idFromUpdateMessage).getNumberOfDecimal() +
+                        "\nБанк: " + settings.get(idFromUpdateMessage).getBankMame() +
+                        "\nНеобхідні валюти: " + settings.get(idFromUpdateMessage).getCurrencies() + message +
+                        "\n\nЩоб отримати інформацію одразу, написніть:\n \"Отримати інфо\" \uD83D\uDC47\uD83C\uDFFB")
+                .chatId(update.getMessage().getChatId().toString())
+                .replyMarkup(createCommonButtons())
+                .build());
     }
 
     private CurrencyHolder getCurrencyHolder(String bankName, Currencies currencies) {
@@ -240,17 +269,10 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
         CurrencyHolder defaultCurrency1 = getCurrencyHolder(defaultBank, USD);
         CurrencyHolder defaultCurrency2 = getCurrencyHolder(defaultBank, EUR);
 
-        settings.put(chatId, new UsersSettings(0, 2, defaultBank,
+        settings.put(chatId, new UserSettings(0, 2, defaultBank,
                 Set.of(defaultCurrency1, defaultCurrency2), "9"));
         settings.get(chatId).setChatId(chatId);
         check.put(chatId, true);
-    }
-
-    private static void handler(String data, InlineKeyboardMarkup markup) {
-        markup.getKeyboard().forEach(buttons ->
-                buttons.stream()
-                        .filter(button -> button.getCallbackData().equals(data))
-                        .forEach(button -> button.setText(button.getText() + " ✅")));
     }
 
     @SneakyThrows
@@ -271,15 +293,6 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                 .build());
     }
 
-    public static EditMessageReplyMarkup getEditMessageReplyMarkup(InlineKeyboardMarkup markup, CallbackQuery
-            callbackQuery) {
-        return EditMessageReplyMarkup.builder()
-                .chatId(callbackQuery.getMessage().getChatId().toString())
-                .messageId(callbackQuery.getMessage().getMessageId())
-                .replyMarkup(markup)
-                .build();
-    }
-
     @Override
     public String getBotUsername() {
         return BOT_NAME;
@@ -290,4 +303,10 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
         return BOT_TOKEN;
     }
 
+    public void printMessage(Long chatID, String messageText) throws TelegramApiException {
+        execute(SendMessage.builder()
+                .text(messageText)
+                .chatId(chatID)
+                .build());
+    }
 }
