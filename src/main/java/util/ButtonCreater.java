@@ -36,7 +36,8 @@ public class ButtonCreater {
         List<InlineKeyboardButton> digitsButtons = new ArrayList<>(Arrays.asList(
                 getInlineKeyboardButton("2", "2"),
                 getInlineKeyboardButton("3", "3"),
-                getInlineKeyboardButton("4", "4")
+                getInlineKeyboardButton("4", "4"),
+                getInlineKeyboardButton("Підтвердити", "Confirm")
         ));
         return getInlineKeyboardMarkup(getLists(digitsButtons));
     }
@@ -45,7 +46,8 @@ public class ButtonCreater {
         List<InlineKeyboardButton> currenciesButtons = new ArrayList<>(Arrays.asList(
                 getInlineKeyboardButton(USD.name(), "USD"),
                 getInlineKeyboardButton(EUR.name(), "EUR"),
-                getInlineKeyboardButton(GBP.name(), "GBP")
+                getInlineKeyboardButton(GBP.name(), "GBP"),
+                getInlineKeyboardButton("Підтвердити", "Confirm")
         ));
         return getInlineKeyboardMarkup(getLists(currenciesButtons));
     }
@@ -54,7 +56,8 @@ public class ButtonCreater {
         List<InlineKeyboardButton> banksButtons = new ArrayList<>(Arrays.asList(
                 getInlineKeyboardButton("ПриватБанк", "ПриватБанк"),
                 getInlineKeyboardButton("Монобанк", "Монобанк"),
-                getInlineKeyboardButton("НБУ", "НБУ")
+                getInlineKeyboardButton("НБУ", "НБУ"),
+                getInlineKeyboardButton("Підтвердити", "Confirm")
         ));
         return getInlineKeyboardMarkup(getLists(banksButtons));
     }

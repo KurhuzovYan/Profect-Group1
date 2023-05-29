@@ -11,6 +11,7 @@ import lombok.Data;
 import lombok.SneakyThrows;
 import org.telegram.telegrambots.extensions.bots.commandbot.TelegramLongPollingCommandBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -102,6 +103,12 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                 case "Time":
                     getReplyKeyboardMarkup(update, "Оберіть час щоденного сповіщення", createReminderButtons());
                     break;
+                case "Confirm":
+                    execute(DeleteMessage.builder()
+                            .chatId(idFromCallbackQuery)
+                            .messageId(update.getCallbackQuery().getMessage().getMessageId())
+                            .build());
+                    break;
             }
 
             if (data.equals("2") || data.equals("3") || data.equals("4")) {
@@ -176,6 +183,7 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                         .forEach(entry -> entry.getValue().setCurrencies(updatedCurrencies));
 
             }
+
         } else if (update.getMessage().hasText()) {
             Long idFromUpdateMessage = update.getMessage().getChat().getId();
 
@@ -199,9 +207,9 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                     .chatId(update.getMessage().getChatId().toString())
                     .replyMarkup(createCommonButtons())
                     .build());
-        }
 
-        try (FileWriter writer = new FileWriter("entities.json")) {
+        }
+            try (FileWriter writer = new FileWriter("entities.json")) {
             writer.write(GSON.toJson(settings));
             writer.flush();
         }
