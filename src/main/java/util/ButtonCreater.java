@@ -27,7 +27,7 @@ public class ButtonCreater {
                 getInlineKeyboardButton("Кількість знаків після коми", "NumberOfDecimal"),
                 getInlineKeyboardButton("Банк", "Bank"),
                 getInlineKeyboardButton("Валюти", "Currencies"),
-                getInlineKeyboardButton("Час оповіщень", "Time")
+                getInlineKeyboardButton("Час оповіщення", "Time")
         ));
         return getInlineKeyboardMarkup(getLists(settingsButtons));
     }
@@ -37,7 +37,7 @@ public class ButtonCreater {
                 getInlineKeyboardButton("2", "2"),
                 getInlineKeyboardButton("3", "3"),
                 getInlineKeyboardButton("4", "4"),
-                getInlineKeyboardButton("Підтвердити", "Confirm")
+                getInlineKeyboardButton("Підтвердити ✅", "Confirm")
         ));
         return getInlineKeyboardMarkup(getLists(digitsButtons));
     }
@@ -47,7 +47,7 @@ public class ButtonCreater {
                 getInlineKeyboardButton(USD.name(), "USD"),
                 getInlineKeyboardButton(EUR.name(), "EUR"),
                 getInlineKeyboardButton(GBP.name(), "GBP"),
-                getInlineKeyboardButton("Підтвердити", "Confirm")
+                getInlineKeyboardButton("Підтвердити ✅", "Confirm")
         ));
         return getInlineKeyboardMarkup(getLists(currenciesButtons));
     }
@@ -57,14 +57,14 @@ public class ButtonCreater {
                 getInlineKeyboardButton("ПриватБанк", "ПриватБанк"),
                 getInlineKeyboardButton("Монобанк", "Монобанк"),
                 getInlineKeyboardButton("НБУ", "НБУ"),
-                getInlineKeyboardButton("Підтвердити", "Confirm")
+                getInlineKeyboardButton("Підтвердити ✅", "Confirm")
         ));
         return getInlineKeyboardMarkup(getLists(banksButtons));
     }
 
     public static ReplyKeyboardMarkup createReminderButtons() {
         List<KeyboardButton> listOfButtons = List.of("9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "Вимкнути оповіщення").stream()
-                .map(button -> new KeyboardButton(button))
+                .map(KeyboardButton::new)
                 .collect(Collectors.toList());
 
         List<KeyboardRow> rows = new ArrayList<>(
@@ -81,12 +81,10 @@ public class ButtonCreater {
             else if (i >= 9 && i <= 10) rows.get(3).add(listOfButtons.get(i));
         }
 
-        ReplyKeyboardMarkup keyboardMarkup = ReplyKeyboardMarkup.builder()
+        return ReplyKeyboardMarkup.builder()
                 .keyboard(rows)
                 .resizeKeyboard(true)
                 .build();
-
-        return keyboardMarkup;
     }
 
     private static List<List<InlineKeyboardButton>> getLists(List<InlineKeyboardButton> listButtons) {

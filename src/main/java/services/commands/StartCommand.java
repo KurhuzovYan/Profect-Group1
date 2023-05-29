@@ -21,9 +21,9 @@ public class StartCommand extends BotCommand {
     public void execute(AbsSender absSender, User user, Chat chat, String[] strings) {
         SendMessage message = new SendMessage();
 
-        message.setText("Вітаю " + user.getFirstName() +
-                ". \nЦей бот допоможе відстежувати актуальні курси валют." +
-                "\nОберіть наступну дію \uD83D\uDC47\n");
+        message.setText("Вітаю, " + user.getFirstName() + " \uD83D\uDC4B\uD83C\uDFFB " +
+                "\nЦей бот допоможе відстежувати актуальні курси валют обранних Вами банків." +
+                "\n\nОберіть наступну дію \uD83D\uDC47\uD83C\uDFFB");
         message.setChatId(chat.getId());
         message.setReplyMarkup(createCommonButtons());
 

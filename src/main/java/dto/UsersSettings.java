@@ -8,7 +8,7 @@ public class UsersSettings {
     private long chatId;
     private int numberOfDecimal;
     private String bankMame;
-    private Set<CurrencyHolder> currencies = new HashSet<>();
+    private Set<CurrencyHolder> currencies;
     private String reminder;
 
     public UsersSettings(long chatId, int numberOfDecimal, String bankMame, Set<CurrencyHolder> currencies, String reminder) {
