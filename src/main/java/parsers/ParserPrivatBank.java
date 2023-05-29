@@ -24,7 +24,7 @@ import static constants.Constants.*;
 
 public class ParserPrivatBank {
 
-    private static CurrenciesPack pack = new CurrenciesPack();
+    private static final CurrenciesPack pack = new CurrenciesPack();
 
     public static List<PrivatBank> sendRequest(String endpoint) {
         HttpURLConnection connection = null;
@@ -57,16 +57,15 @@ public class ParserPrivatBank {
         }
 
         Type type = TypeToken.getParameterized(List.class, PrivatBank.class).getType();
-        List<PrivatBank> currencies = new Gson().fromJson(String.valueOf(response), type);
 
-        return currencies;
+        return new Gson().fromJson(String.valueOf(response), type);
     }
 
     public static CurrenciesPack getCurrencyFromPrivatBank() {
         List<PrivatBank> currencies = sendRequest("&coursid=11");
         List<PrivatBank> gbp = sendRequest("&coursid=12").stream()
                 .filter(currency -> currency.getCcy().equals(GBP.name()))
-                .collect(Collectors.toList());
+                .toList();
         currencies.add(gbp.get(0));
 
         Date date = new Date();

@@ -10,6 +10,7 @@ import static constants.Currencies.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 public class ButtonCreater {
@@ -27,7 +28,8 @@ public class ButtonCreater {
                 getInlineKeyboardButton("Кількість знаків після коми", "NumberOfDecimal"),
                 getInlineKeyboardButton("Банк", "Bank"),
                 getInlineKeyboardButton("Валюти", "Currencies"),
-                getInlineKeyboardButton("Час оповіщень", "Time")
+                getInlineKeyboardButton("Час оповіщень", "Time"),
+                getInlineKeyboardButton("До стартового меню", "Menu")
         ));
         return getInlineKeyboardMarkup(getLists(settingsButtons));
     }
@@ -45,7 +47,8 @@ public class ButtonCreater {
         List<InlineKeyboardButton> currenciesButtons = new ArrayList<>(Arrays.asList(
                 getInlineKeyboardButton(USD.name(), "USD"),
                 getInlineKeyboardButton(EUR.name(), "EUR"),
-                getInlineKeyboardButton(GBP.name(), "GBP")
+                getInlineKeyboardButton(GBP.name(), "GBP"),
+                getInlineKeyboardButton("Зберігти", "save-currencies")
         ));
         return getInlineKeyboardMarkup(getLists(currenciesButtons));
     }
@@ -60,9 +63,9 @@ public class ButtonCreater {
     }
 
     public static ReplyKeyboardMarkup createReminderButtons() {
-        List<KeyboardButton> listOfButtons = List.of("9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "Вимкнути оповіщення").stream()
-                .map(button -> new KeyboardButton(button))
-                .collect(Collectors.toList());
+        List<KeyboardButton> listOfButtons = Stream.of("9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "Вимкнути оповіщення")
+                .map(KeyboardButton::new)
+                .toList();
 
         List<KeyboardRow> rows = new ArrayList<>(
                 Arrays.asList(new KeyboardRow(),
@@ -73,17 +76,15 @@ public class ButtonCreater {
 
         for (int i = 0; i < listOfButtons.size(); i++) {
             if (i <= 2) rows.get(0).add(listOfButtons.get(i));
-            else if (i >= 3 && i <= 5) rows.get(1).add(listOfButtons.get(i));
-            else if (i >= 6 && i <= 8) rows.get(2).add(listOfButtons.get(i));
-            else if (i >= 9 && i <= 10) rows.get(3).add(listOfButtons.get(i));
+            else if (i <= 5) rows.get(1).add(listOfButtons.get(i));
+            else if (i <= 8) rows.get(2).add(listOfButtons.get(i));
+            else if (i <= 10) rows.get(3).add(listOfButtons.get(i));
         }
 
-        ReplyKeyboardMarkup keyboardMarkup = ReplyKeyboardMarkup.builder()
+        return ReplyKeyboardMarkup.builder()
                 .keyboard(rows)
                 .resizeKeyboard(true)
                 .build();
-
-        return keyboardMarkup;
     }
 
     private static List<List<InlineKeyboardButton>> getLists(List<InlineKeyboardButton> listButtons) {

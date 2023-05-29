@@ -1,13 +1,11 @@
 package controller;
 
-import static constants.Constants.*;
-import static util.ButtonCreater.*;
-
 import constants.Currencies;
 import dto.CurrenciesPack;
 import dto.CurrencyHolder;
 import dto.UsersSettings;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.SneakyThrows;
 import org.telegram.telegrambots.extensions.bots.commandbot.TelegramLongPollingCommandBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -18,17 +16,20 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import services.commands.StartCommand;
 
-
-import static parsers.ParserNBU.*;
-import static parsers.ParserMonobank.*;
-import static parsers.ParserPrivatBank.*;
-
 import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import static constants.Constants.*;
 import static constants.Currencies.*;
+import static parsers.ParserMonobank.getCurrencyFromMono;
+import static parsers.ParserNBU.getCurrencyFromNBU;
+import static parsers.ParserPrivatBank.getCurrencyFromPrivatBank;
+import static util.ButtonCreater.*;
 
+@EqualsAndHashCode(callSuper = true)
 @Data
 public class TelegramBot extends TelegramLongPollingCommandBot {
 
@@ -42,7 +43,7 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
         register(new StartCommand());
 
         date = new Date();
-        settings = new HashMap();
+        settings = new HashMap<>();
         check = new HashMap<>();
     }
 
@@ -54,127 +55,151 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
             final CallbackQuery callbackQuery = update.getCallbackQuery();
             final String data = callbackQuery.getData();
 
-          if (!settings.containsKey(idFromCallbackQuery)) {
-              createUserWithDefaultSettings(idFromCallbackQuery);
-          }
-
-            switch (data) {
-                case "Info":
-                    String defaultReminder = settings.get(idFromCallbackQuery).getReminder().equals("Вимкнути оповіщення") ?
-                            "\n\nЩоденне сповіщення: викл." : "\n\nЩоденне сповіщення о " + settings.get(idFromCallbackQuery).getReminder() + ":00";
-
-                    List<CurrencyHolder> allUsers = settings.get(idFromCallbackQuery).getCurrencies().stream()
-                            .collect(Collectors.toList());
-
-                    Double[] courses = allUsers.stream()
-                            .map(currency -> new Double[]{currency.getBuy(), currency.getCross(), currency.getSale()})
-                            .flatMap(Arrays::stream)
-                            .toArray(Double[]::new);
-
-                    StringBuilder resultBuilder = new StringBuilder();
-
-                    for (int i = 0; i < settings.get(idFromCallbackQuery).getCurrencies().size(); i++) {
-                        String buy = courses[i * 3] != 0 ? "\nКупівля : " + String.format("%." + settings.get(idFromCallbackQuery).getNumberOfDecimal() + "f", allUsers.get(i).getBuy()) : "";
-                        String cross = courses[i * 3 + 1] != 0 ? "\nКрос: " + String.format("%." + settings.get(idFromCallbackQuery).getNumberOfDecimal() + "f", allUsers.get(i).getCross()) : "";
-                        String sale = courses[i * 3 + 2] != 0 ? "\nПродаж: " + String.format("%." + settings.get(idFromCallbackQuery).getNumberOfDecimal() + "f", allUsers.get(i).getSale()) : "";
-
-                        resultBuilder.append("\n\nВалютна пара: ")
-                                .append(allUsers.get(i).getCurrency().name())
-                                .append("/UAH")
-                                .append(buy)
-                                .append(cross)
-                                .append(sale);
-                    }
-                    getInlineKeyboardMarkup(update, "Курс в " + settings.get(idFromCallbackQuery).getBankMame() + resultBuilder + defaultReminder, createCommonButtons());
-                    break;
-                case "Settings":
-                    getInlineKeyboardMarkup(update, "Налаштування", createSettingsButtons());
-                    break;
-                case "NumberOfDecimal":
-                    getInlineKeyboardMarkup(update, "Оберіть кількість знаків після коми", createButtonsWithNumberOfDecimalPlaces());
-                    break;
-                case "Bank":
-                    getInlineKeyboardMarkup(update, "Оберіть необхідний банк", createButtonsWithBanks());
-                    break;
-                case "Currencies":
-                    getInlineKeyboardMarkup(update, "Оберіть необхідні валюти", createButtonsWithCurrencies());
-                    break;
-                case "Time":
-                    getReplyKeyboardMarkup(update, "Оберіть час щоденного сповіщення", createReminderButtons());
-                    break;
+            if (!settings.containsKey(idFromCallbackQuery)) {
+                createUserWithDefaultSettings(idFromCallbackQuery);
             }
 
-            if (data.equals("2") || data.equals("3") || data.equals("4")) {
+            final String level = settings.get(idFromCallbackQuery).getLevel();
 
-                InlineKeyboardMarkup markup = createButtonsWithNumberOfDecimalPlaces();
-                handler(data, markup);
-                execute(getEditMessageReplyMarkup(markup, callbackQuery));
+            if (level.equals("info")) {
+                switch (data) {
+                    case "Info" -> showInfo(update, idFromCallbackQuery);
+                    case "Settings" -> {
+                        getInlineKeyboardMarkup(update, "Налаштування", createSettingsButtons());
+                        settings.get(idFromCallbackQuery).setLevel("Settings");
+                    }
 
-                String current = markup.getKeyboard().stream()
-                        .flatMap(buttons -> buttons.stream()
-                                .filter(button -> button.getText().equals(data + " ✅"))
-                                .map(button -> button.getText().replaceAll(" ✅", "")))
-                        .collect(Collectors.joining());
-
-                settings.entrySet().stream()
-                        .filter(entry -> entry.getValue().getChatId() == idFromCallbackQuery)
-                        .forEach(entry -> entry.getValue().setNumberOfDecimal(Integer.valueOf(current)));
-
-            } else if (data.equals(USD.name()) || data.equals(EUR.name()) || data.equals(GBP.name())) {
-
-                if (check.get(idFromCallbackQuery)) {
-                    Set<CurrencyHolder> newSet = new HashSet<>();
-                    settings.get(idFromCallbackQuery).setCurrencies(newSet);
-                    check.put(idFromCallbackQuery, false);
                 }
+            }
 
-                InlineKeyboardMarkup replyMarkup = callbackQuery.getMessage().getReplyMarkup();
-                replyMarkup.getKeyboard().forEach(buttons ->
-                        buttons.stream()
-                                .filter(button -> button.getCallbackData().equals(data))
-                                .forEach(button -> {
-                                    if (button.getText().equals(data)) {
-                                        button.setText(data + " ✅");
-                                    } else {
-                                        button.setText(data);
-                                    }
-                                }));
+            if (level.equals("Settings")) {
+                switch (data) {
+                    case "NumberOfDecimal" -> {
+                        getInlineKeyboardMarkup(update, "Оберіть кількість знаків після коми", createButtonsWithNumberOfDecimalPlaces());
+                        settings.get(idFromCallbackQuery).setLevel("Settings-NumberOfDecimal");
+                    }
+                    case "Bank" -> {
+                        getInlineKeyboardMarkup(update, "Оберіть необхідний банк", createButtonsWithBanks());
+                        settings.get(idFromCallbackQuery).setLevel("Settings-Bank");
+                    }
+                    case "Currencies" -> {
+                        getInlineKeyboardMarkup(update, "Оберіть необхідні валюти", createButtonsWithCurrencies());
+                        settings.get(idFromCallbackQuery).setLevel("Settings-Currencies");
+                    }
+                    case "Time" -> {
+                        getReplyKeyboardMarkup(update, "Оберіть час щоденного сповіщення", createReminderButtons());
+                        settings.get(idFromCallbackQuery).setLevel("Settings-Time");
+                    }
+                    case "Menu" -> {
+                        StringBuilder backToMenuText = new StringBuilder();
+                        backToMenuText.append("Збережено наступні налаштування: \n")
+                                .append("\nКількість знаків після коми: ")
+                                .append(settings.get(idFromCallbackQuery).getNumberOfDecimal())
+                                .append("\nБанк: ")
+                                .append(settings.get(idFromCallbackQuery).getBankMame())
+                                .append("\nНеобхідні валюти: ")
+                                .append(settings.get(idFromCallbackQuery).getCurrencies())
+                                .append(settings.get(idFromCallbackQuery).getReminder().equals("Вимкнути оповіщення") ?
+                                        "\nЩоденне сповіщення: викл." : "\nЩоденне сповіщення о " + settings.get(idFromCallbackQuery).getReminder() + ":00")
+                                .append("\n\nЩоб отримати інформацію зараз, написніть:\n \"Отримати інфо\" \uD83D\uDC47");
+                        getInlineKeyboardMarkup(update,backToMenuText.toString(),createCommonButtons());
+                        settings.get(idFromCallbackQuery).setLevel("info");
+                    }
+                }
+            }
 
-                settings.entrySet().stream()
-                        .filter(entry -> entry.getKey().equals(idFromCallbackQuery))
-                        .findFirst()
-                        .ifPresent(entry -> {
-                            CurrencyHolder current = getCurrencyHolder(entry.getValue().getBankMame(), getByName(data));
-                            boolean matcher = entry.getValue().getCurrencies().stream()
-                                    .allMatch(currencies -> !currencies.getCurrency().name().equals(data));
+            if (level.equals("Settings-NumberOfDecimal")) {
+                if (data.equals("2") || data.equals("3") || data.equals("4")) {
 
-                            if (entry.getValue().getCurrencies().isEmpty() || matcher) {
-                                entry.getValue().getCurrencies().add(current);
-                            } else {
-                                entry.getValue().getCurrencies().remove(current);
-                            }
-                        });
+                    InlineKeyboardMarkup markup = createButtonsWithNumberOfDecimalPlaces();
+                    handler(data, markup);
+                    execute(getEditMessageReplyMarkup(markup, callbackQuery));
 
-                execute(getEditMessageReplyMarkup(replyMarkup, callbackQuery));
+                    String current = markup.getKeyboard().stream()
+                            .flatMap(buttons -> buttons.stream()
+                                    .filter(button -> button.getText().equals(data + " ✅"))
+                                    .map(button -> button.getText().replaceAll(" ✅", "")))
+                            .collect(Collectors.joining());
 
-            } else if (data.equals("ПриватБанк") || data.equals("Монобанк") || data.equals("НБУ")) {
+                    settings.entrySet().stream()
+                            .filter(entry -> entry.getValue().getChatId() == idFromCallbackQuery)
+                            .forEach(entry -> entry.getValue().setNumberOfDecimal(Integer.parseInt(current)));
 
-                InlineKeyboardMarkup markup = createButtonsWithBanks();
-                handler(data, markup);
-                execute(getEditMessageReplyMarkup(markup, callbackQuery));
-                settings.get(idFromCallbackQuery).setBankMame(data);
+                    getInlineKeyboardMarkup(update, "Налаштування", createSettingsButtons());
+                    settings.get(idFromCallbackQuery).setLevel("Settings");
+                    writeEntitiesToDisk();
+                }
+            }
 
-                Set<CurrencyHolder> updatedCurrencies = settings.get(idFromCallbackQuery).getCurrencies().stream()
-                        .map(cur -> {
-                            cur.setBankName(data);
-                            return getCurrencyHolder(data, cur.getCurrency());
-                        })
-                        .collect(Collectors.toSet());
+            if (level.equals("Settings-Bank")) {
+                if (data.equals("ПриватБанк") || data.equals("Монобанк") || data.equals("НБУ")) {
 
-                settings.entrySet().stream()
-                        .filter(entry -> entry.getValue().getChatId() == idFromCallbackQuery)
-                        .forEach(entry -> entry.getValue().setCurrencies(updatedCurrencies));
+                    InlineKeyboardMarkup markup = createButtonsWithBanks();
+                    handler(data, markup);
+                    execute(getEditMessageReplyMarkup(markup, callbackQuery));
+                    settings.get(idFromCallbackQuery).setBankMame(data);
 
+                    Set<CurrencyHolder> updatedCurrencies = settings.get(idFromCallbackQuery).getCurrencies().stream()
+                            .map(cur -> {
+                                cur.setBankName(data);
+                                return getCurrencyHolder(data, cur.getCurrency());
+                            })
+                            .collect(Collectors.toSet());
+
+                    settings.entrySet().stream()
+                            .filter(entry -> entry.getValue().getChatId() == idFromCallbackQuery)
+                            .forEach(entry -> entry.getValue().setCurrencies(updatedCurrencies));
+
+                    getInlineKeyboardMarkup(update, "Налаштування", createSettingsButtons());
+                    settings.get(idFromCallbackQuery).setLevel("Settings");
+                    writeEntitiesToDisk();
+                }
+            }
+
+            if (level.equals("Settings-Currencies")) {
+                if (data.equals(USD.name()) || data.equals(EUR.name()) || data.equals(GBP.name()) || data.equals("save-currencies")) {
+
+                    if (check.get(idFromCallbackQuery)) {
+                        Set<CurrencyHolder> newSet = new HashSet<>();
+                        settings.get(idFromCallbackQuery).setCurrencies(newSet);
+                        check.put(idFromCallbackQuery, false);
+                    }
+
+                    InlineKeyboardMarkup replyMarkup = callbackQuery.getMessage().getReplyMarkup();
+                    replyMarkup.getKeyboard().forEach(buttons ->
+                            buttons.stream()
+                                    .filter(button -> button.getCallbackData().equals(data))
+                                    .forEach(button -> {
+                                        if (button.getText().equals(data)) {
+                                            button.setText(data + " ✅");
+                                        } else {
+                                            button.setText(data);
+                                        }
+                                    }));
+
+                    settings.entrySet().stream()
+                            .filter(entry -> entry.getKey().equals(idFromCallbackQuery))
+                            .findFirst()
+                            .ifPresent(entry -> {
+                                CurrencyHolder current = getCurrencyHolder(entry.getValue().getBankMame(), getByName(data));
+                                boolean matcher = entry.getValue().getCurrencies().stream()
+                                        .noneMatch(currencies -> currencies.getCurrency().name().equals(data));
+
+                                if (entry.getValue().getCurrencies().isEmpty() || matcher) {
+                                    entry.getValue().getCurrencies().add(current);
+                                } else {
+                                    entry.getValue().getCurrencies().remove(current);
+                                }
+                            });
+
+                    if (data.equals("save-currencies")) {
+                        getInlineKeyboardMarkup(update, "Налаштування", createSettingsButtons());
+                        settings.get(idFromCallbackQuery).setLevel("Settings");
+                        writeEntitiesToDisk();
+                    } else {
+                        execute(getEditMessageReplyMarkup(replyMarkup, callbackQuery));
+                    }
+                }
             }
         } else if (update.getMessage().hasText()) {
             Long idFromUpdateMessage = update.getMessage().getChat().getId();
@@ -183,34 +208,75 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                 createUserWithDefaultSettings(idFromUpdateMessage);
             }
 
-            settings.entrySet().stream()
-                    .filter(entry -> entry.getValue().getChatId() == idFromUpdateMessage)
-                    .forEach(entry -> entry.getValue().setReminder(update.getMessage().getText()));
+            final String level = settings.get(idFromUpdateMessage).getLevel();
 
-            String updateReminder = settings.get(idFromUpdateMessage).getReminder().equals("Вимкнути оповіщення") ?
-                    "\nЩоденне сповіщення: викл." : "\nЩоденне сповіщення о " + settings.get(idFromUpdateMessage).getReminder() + ":00";
+            if (Objects.equals(level, "Settings-Time")) {
 
-            execute(SendMessage.builder()
-                    .text("Очікуйте повідомлення з обранними налаштуваннями: \n" +
-                            "\nКількість знаків після коми: " + settings.get(idFromUpdateMessage).getNumberOfDecimal() +
-                            "\nБанк: " + settings.get(idFromUpdateMessage).getBankMame() +
-                            "\nНеобхідні валюти: " + settings.get(idFromUpdateMessage).getCurrencies() + updateReminder +
-                            "\n\nЩоб отримати інформацію одразу, написніть:\n \"Отримати інфо\" \uD83D\uDC47")
-                    .chatId(update.getMessage().getChatId().toString())
-                    .replyMarkup(createCommonButtons())
-                    .build());
+                settings.entrySet().stream()
+                        .filter(entry -> entry.getValue().getChatId() == idFromUpdateMessage)
+                        .forEach(entry -> entry.getValue().setReminder(update.getMessage().getText()));
+
+                String updateReminder = settings.get(idFromUpdateMessage).getReminder().equals("Вимкнути оповіщення") ?
+                        "\nЩоденне сповіщення: викл." : "\nЩоденне сповіщення о " + settings.get(idFromUpdateMessage).getReminder() + ":00";
+
+                execute(SendMessage.builder()
+                        .text("Очікуйте повідомлення з обранними налаштуваннями: \n" +
+                                "\nКількість знаків після коми: " + settings.get(idFromUpdateMessage).getNumberOfDecimal() +
+                                "\nБанк: " + settings.get(idFromUpdateMessage).getBankMame() +
+                                "\nНеобхідні валюти: " + settings.get(idFromUpdateMessage).getCurrencies() + updateReminder +
+                                "\n\nЩоб отримати інформацію одразу, написніть:\n \"Отримати інфо\" \uD83D\uDC47")
+                        .chatId(update.getMessage().getChatId().toString())
+                        .replyMarkup(createCommonButtons())
+                        .build());
+
+                settings.get(idFromUpdateMessage).setLevel("Settings");
+                writeEntitiesToDisk();
+            }
         }
 
+
+    }
+
+    private void writeEntitiesToDisk() {
         try (FileWriter writer = new FileWriter("entities.json")) {
             writer.write(GSON.toJson(settings));
             writer.flush();
+        } catch (IOException e) {
+            System.out.println(e);
         }
     }
 
+    private void showInfo(Update update, Long idFromCallbackQuery) {
+        String defaultReminder = settings.get(idFromCallbackQuery).getReminder().equals("Вимкнути оповіщення") ?
+                "\n\nЩоденне сповіщення: викл." : "\n\nЩоденне сповіщення о " + settings.get(idFromCallbackQuery).getReminder() + ":00";
+        List<CurrencyHolder> allUsers = settings.get(idFromCallbackQuery).getCurrencies().stream()
+                .toList();
+
+        Double[] courses = allUsers.stream()
+                .map(currency -> new Double[]{currency.getBuy(), currency.getCross(), currency.getSale()})
+                .flatMap(Arrays::stream)
+                .toArray(Double[]::new);
+
+        StringBuilder resultBuilder = new StringBuilder();
+        for (int i = 0; i < settings.get(idFromCallbackQuery).getCurrencies().size(); i++) {
+            String buy = courses[i * 3] != 0 ? "\nКупівля : " + String.format("%." + settings.get(idFromCallbackQuery).getNumberOfDecimal() + "f", allUsers.get(i).getBuy()) : "";
+            String cross = courses[i * 3 + 1] != 0 ? "\nКрос: " + String.format("%." + settings.get(idFromCallbackQuery).getNumberOfDecimal() + "f", allUsers.get(i).getCross()) : "";
+            String sale = courses[i * 3 + 2] != 0 ? "\nПродаж: " + String.format("%." + settings.get(idFromCallbackQuery).getNumberOfDecimal() + "f", allUsers.get(i).getSale()) : "";
+
+            resultBuilder.append("\n\nВалютна пара: ")
+                    .append(allUsers.get(i).getCurrency().name())
+                    .append("/UAH")
+                    .append(buy)
+                    .append(cross)
+                    .append(sale);
+        }
+        getInlineKeyboardMarkup(update, "Курс в " + settings.get(idFromCallbackQuery).getBankMame() + resultBuilder + defaultReminder, createCommonButtons());
+    }
+
     private CurrencyHolder getCurrencyHolder(String bankName, Currencies currencies) {
-        List<CurrenciesPack> currentPack = Arrays.asList(getCurrencyFromPrivatBank(), getCurrencyFromNBU(), getCurrencyFromMono()).stream()
+        List<CurrenciesPack> currentPack = Stream.of(getCurrencyFromPrivatBank(), getCurrencyFromNBU(), getCurrencyFromMono())
                 .filter(pack -> pack.getBankName().equals(bankName))
-                .collect(Collectors.toList());
+                .toList();
 
         return currentPack.stream()
                 .flatMap(pack -> pack.getCurrencies().stream())
@@ -233,7 +299,7 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
         CurrencyHolder defaultCurrency2 = getCurrencyHolder(defaultBank, EUR);
 
         settings.put(chatId, new UsersSettings(0, 2, defaultBank,
-                Set.of(defaultCurrency1, defaultCurrency2), "9"));
+                Set.of(defaultCurrency1, defaultCurrency2), "9", "info"));
         settings.get(chatId).setChatId(chatId);
         check.put(chatId, true);
     }

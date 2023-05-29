@@ -1,14 +1,11 @@
 package parsers;
 
-import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import constants.Currencies;
+import dto.CurrenciesPack;
 import dto.CurrencyHolder;
 import dto.general.Monobank;
-import dto.CurrenciesPack;
 import lombok.SneakyThrows;
-
-import static constants.Constants.*;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -16,12 +13,17 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import static constants.Constants.GSON;
+import static constants.Constants.MONO_API_URL;
 
 public class ParserMonobank {
 
     private static final HttpClient CLIENT = HttpClient.newHttpClient();
-    private static CurrenciesPack pack = new CurrenciesPack();
+    private static final CurrenciesPack pack = new CurrenciesPack();
     private static final String CONTENT_TYPE = "Content-Type";
     public static final String JSON = "application/json; charset=UTF-8";
 
@@ -44,9 +46,7 @@ public class ParserMonobank {
         ArrayList<CurrencyHolder> tempList = new ArrayList<>();
 
 
-        for (int i = 0; i < needed.size(); i++) {
-            Monobank temp = needed.get(i);
-
+        for (Monobank temp : needed) {
             CurrencyHolder currencyHolder = new CurrencyHolder(
                     temp.getDate(),
                     "Монобанк",
@@ -55,7 +55,7 @@ public class ParserMonobank {
                     temp.getRateBuy(),
                     temp.getRateCross(),
                     temp.getRateSell()
-                    );
+            );
 
             tempList.add(currencyHolder);
         }
