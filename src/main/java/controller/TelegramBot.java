@@ -9,6 +9,7 @@ import lombok.EqualsAndHashCode;
 import lombok.SneakyThrows;
 import org.telegram.telegrambots.extensions.bots.commandbot.TelegramLongPollingCommandBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -108,6 +109,10 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                         settings.get(idFromCallbackQuery).setLevel("info");
                     }
                 }
+                execute(DeleteMessage.builder()
+                        .chatId(idFromCallbackQuery)
+                        .messageId(update.getCallbackQuery().getMessage().getMessageId())
+                        .build());
             }
 
             if (level.equals("Settings-NumberOfDecimal")) {
@@ -130,6 +135,11 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                     getInlineKeyboardMarkup(update, "Налаштування", createSettingsButtons());
                     settings.get(idFromCallbackQuery).setLevel("Settings");
                     writeEntitiesToDisk();
+
+                    execute(DeleteMessage.builder()
+                            .chatId(idFromCallbackQuery)
+                            .messageId(update.getCallbackQuery().getMessage().getMessageId())
+                            .build());
                 }
             }
 
@@ -155,6 +165,11 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                     getInlineKeyboardMarkup(update, "Налаштування", createSettingsButtons());
                     settings.get(idFromCallbackQuery).setLevel("Settings");
                     writeEntitiesToDisk();
+
+                    execute(DeleteMessage.builder()
+                            .chatId(idFromCallbackQuery)
+                            .messageId(update.getCallbackQuery().getMessage().getMessageId())
+                            .build());
                 }
             }
 
@@ -188,6 +203,11 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                         getInlineKeyboardMarkup(update, "Налаштування", createSettingsButtons());
                         settings.get(idFromCallbackQuery).setLevel("Settings");
                         writeEntitiesToDisk();
+
+                        execute(DeleteMessage.builder()
+                                .chatId(idFromCallbackQuery)
+                                .messageId(update.getCallbackQuery().getMessage().getMessageId())
+                                .build());
                     } else {
 
                         settings.entrySet().stream()
@@ -240,6 +260,11 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
 
                 settings.get(idFromUpdateMessage).setLevel("info");
                 writeEntitiesToDisk();
+
+                execute(DeleteMessage.builder()
+                        .chatId(idFromUpdateMessage)
+                        .messageId(update.getCallbackQuery().getMessage().getMessageId())
+                        .build());
             }
         }
 
