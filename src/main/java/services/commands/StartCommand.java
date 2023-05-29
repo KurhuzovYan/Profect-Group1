@@ -24,7 +24,7 @@ public class StartCommand extends BotCommand {
         message.setText("Вітаю " + user.getFirstName() +
                 ". \nЦей бот допоможе відстежувати актуальні курси валют." +
                 "\nОберіть наступну дію \uD83D\uDC47\n");
-        message.setChatId(chat.getId());
+        message.setChatId(String.valueOf(chat.getId()));
         message.setReplyMarkup(createCommonButtons());
 
         absSender.execute(message);

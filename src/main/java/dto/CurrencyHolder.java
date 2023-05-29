@@ -2,11 +2,10 @@ package dto;
 
 import constants.Currencies;
 import lombok.Data;
-
 import java.util.Date;
 
 @Data
-public class CurrencyHolder {
+public class CurrencyHolder{
     private Date currencyDate;
     private double  saleRateNB, rateCross, purchaseRateNB;
     private Currencies baseCurrency, currency;
