@@ -33,7 +33,7 @@ import static util.ButtonCreater.*;
 @Data
 public class TelegramBot extends TelegramLongPollingCommandBot {
 
-    private Map<Long, UsersSettings> settings;
+    private static Map<Long, UsersSettings> settings;
     private Map<Long, Boolean> check;
     private UsersSettings defaultSettings;
     private static CurrenciesPack pack;
@@ -84,6 +84,7 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                     }
                     case "Currencies" -> {
                         getInlineKeyboardMarkup(update, "Оберіть необхідні валюти", createButtonsWithCurrencies());
+                        settings.get(idFromCallbackQuery).setCurrencies(null);
                         settings.get(idFromCallbackQuery).setLevel("Settings-Currencies");
                     }
                     case "Time" -> {
@@ -101,8 +102,8 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                                 .append(settings.get(idFromCallbackQuery).getCurrencies())
                                 .append(settings.get(idFromCallbackQuery).getReminder().equals("Вимкнути оповіщення") ?
                                         "\nЩоденне сповіщення: викл." : "\nЩоденне сповіщення о " + settings.get(idFromCallbackQuery).getReminder() + ":00")
-                                .append("\n\nЩоб отримати інформацію зараз, написніть:\n \"Отримати інфо\" \uD83D\uDC47");
-                        getInlineKeyboardMarkup(update,backToMenuText.toString(),createCommonButtons());
+                                .append("\n\nЩоб отримати актуальну інформацію зараз, натисніть:\n \"Отримати інфо\" \uD83D\uDC47");
+                        getInlineKeyboardMarkup(update, backToMenuText.toString(), createCommonButtons());
                         settings.get(idFromCallbackQuery).setLevel("info");
                     }
                 }
@@ -170,35 +171,42 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                             buttons.stream()
                                     .filter(button -> button.getCallbackData().equals(data))
                                     .forEach(button -> {
-                                        if (button.getText().equals(data)) {
+                                        if (button.getText().equals(data) && !data.equals("save-currencies")) {
                                             button.setText(data + " ✅");
                                         } else {
                                             button.setText(data);
                                         }
                                     }));
 
-                    settings.entrySet().stream()
-                            .filter(entry -> entry.getKey().equals(idFromCallbackQuery))
-                            .findFirst()
-                            .ifPresent(entry -> {
-                                CurrencyHolder current = getCurrencyHolder(entry.getValue().getBankMame(), getByName(data));
-                                boolean matcher = entry.getValue().getCurrencies().stream()
-                                        .noneMatch(currencies -> currencies.getCurrency().name().equals(data));
-
-                                if (entry.getValue().getCurrencies().isEmpty() || matcher) {
-                                    entry.getValue().getCurrencies().add(current);
-                                } else {
-                                    entry.getValue().getCurrencies().remove(current);
-                                }
-                            });
-
                     if (data.equals("save-currencies")) {
+                        if(settings.get(idFromCallbackQuery).getCurrencies().isEmpty()){
+                            getInlineKeyboardMarkup(update, "Оберіть необхідні валюти\n Потрібно обрати принаймні одну валюту.", createButtonsWithCurrencies());
+                            return;
+                        }
+
                         getInlineKeyboardMarkup(update, "Налаштування", createSettingsButtons());
                         settings.get(idFromCallbackQuery).setLevel("Settings");
                         writeEntitiesToDisk();
                     } else {
+
+                        settings.entrySet().stream()
+                                .filter(entry -> entry.getKey().equals(idFromCallbackQuery))
+                                .findFirst()
+                                .ifPresent(entry -> {
+                                    CurrencyHolder current = getCurrencyHolder(entry.getValue().getBankMame(), getByName(data));
+                                    boolean matcher = entry.getValue().getCurrencies().stream()
+                                            .noneMatch(currencies -> currencies.getCurrency().name().equals(data));
+
+                                    if (entry.getValue().getCurrencies().isEmpty() || matcher) {
+                                        entry.getValue().getCurrencies().add(current);
+                                    } else {
+                                        entry.getValue().getCurrencies().remove(current);
+                                    }
+                                });
+
                         execute(getEditMessageReplyMarkup(replyMarkup, callbackQuery));
                     }
+
                 }
             }
         } else if (update.getMessage().hasText()) {
@@ -210,30 +218,35 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
 
             final String level = settings.get(idFromUpdateMessage).getLevel();
 
-            if (Objects.equals(level, "Settings-Time")) {
+            if (level.equals("Settings-Time")) {
 
                 settings.entrySet().stream()
                         .filter(entry -> entry.getValue().getChatId() == idFromUpdateMessage)
                         .forEach(entry -> entry.getValue().setReminder(update.getMessage().getText()));
 
                 String updateReminder = settings.get(idFromUpdateMessage).getReminder().equals("Вимкнути оповіщення") ?
-                        "\nЩоденне сповіщення: викл." : "\nЩоденне сповіщення о " + settings.get(idFromUpdateMessage).getReminder() + ":00";
+                        "\nЩоденне сповіщення: вимкнено" : "\nЩоденне сповіщення о " + settings.get(idFromUpdateMessage).getReminder() + ":00";
 
                 execute(SendMessage.builder()
-                        .text("Очікуйте повідомлення з обранними налаштуваннями: \n" +
+                        .text("Для Вас збережено наступні налаштування: \n" +
                                 "\nКількість знаків після коми: " + settings.get(idFromUpdateMessage).getNumberOfDecimal() +
                                 "\nБанк: " + settings.get(idFromUpdateMessage).getBankMame() +
                                 "\nНеобхідні валюти: " + settings.get(idFromUpdateMessage).getCurrencies() + updateReminder +
-                                "\n\nЩоб отримати інформацію одразу, написніть:\n \"Отримати інфо\" \uD83D\uDC47")
+                                "\n\nЩоб отримати актуальну інформацію зараз, натисніть:\n \"Отримати інфо\" \uD83D\uDC47")
                         .chatId(update.getMessage().getChatId().toString())
                         .replyMarkup(createCommonButtons())
                         .build());
 
-                settings.get(idFromUpdateMessage).setLevel("Settings");
+                settings.get(idFromUpdateMessage).setLevel("info");
                 writeEntitiesToDisk();
             }
         }
 
+
+    }
+
+    public static void setInitialUserLevel(Long chatId) {
+        settings.get(chatId).setLevel("info");
 
     }
 
@@ -242,7 +255,7 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
             writer.write(GSON.toJson(settings));
             writer.flush();
         } catch (IOException e) {
-            System.out.println(e);
+            System.out.println(e.getMessage());
         }
     }
 

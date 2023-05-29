@@ -7,6 +7,7 @@ import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 import static util.ButtonCreater.*;
+import controller.TelegramBot;
 
 
 
@@ -28,5 +29,6 @@ public class StartCommand extends BotCommand {
         message.setReplyMarkup(createCommonButtons());
 
         absSender.execute(message);
+        TelegramBot.setInitialUserLevel(chat.getId());
     }
 }
