@@ -84,7 +84,8 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                     }
                     case "Currencies" -> {
                         getInlineKeyboardMarkup(update, "Оберіть необхідні валюти", createButtonsWithCurrencies());
-                        settings.get(idFromCallbackQuery).setCurrencies(null);
+                        Set<CurrencyHolder> emptyCurrencyHolder = new HashSet<>();
+                        settings.get(idFromCallbackQuery).setCurrencies(emptyCurrencyHolder);
                         settings.get(idFromCallbackQuery).setLevel("Settings-Currencies");
                     }
                     case "Time" -> {
