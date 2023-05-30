@@ -1,6 +1,5 @@
 package org.currency_bot.util;
 
-import org.currency_bot.constants.Currencies;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -9,6 +8,8 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static org.currency_bot.constants.Currencies.*;
 
 
 public class ButtonCreater {
@@ -43,9 +44,9 @@ public class ButtonCreater {
 
     public static InlineKeyboardMarkup createButtonsWithCurrencies() {
         List<InlineKeyboardButton> currenciesButtons = new ArrayList<>(Arrays.asList(
-                getInlineKeyboardButton(Currencies.USD.name(), "USD"),
-                getInlineKeyboardButton(Currencies.EUR.name(), "EUR"),
-                getInlineKeyboardButton(Currencies.GBP.name(), "GBP"),
+                getInlineKeyboardButton(USD.name(), "USD"),
+                getInlineKeyboardButton(EUR.name(), "EUR"),
+                getInlineKeyboardButton(GBP.name(), "GBP"),
                 getInlineKeyboardButton("Підтвердити ✅", "Confirm")
         ));
         return getInlineKeyboardMarkup(getLists(currenciesButtons));
