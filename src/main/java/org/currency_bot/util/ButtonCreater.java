@@ -45,6 +45,7 @@ public class ButtonCreater {
     }
 
     public static InlineKeyboardMarkup createButtonsWithCurrencies() {
+
         List<InlineKeyboardButton> currenciesButtons = new ArrayList<>(Arrays.asList(
             getInlineKeyboardButton(USD.name(), "USD"),
             getInlineKeyboardButton(EUR.name(), "EUR"),

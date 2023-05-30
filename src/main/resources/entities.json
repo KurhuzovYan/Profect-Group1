@@ -27,35 +27,17 @@
   },
   "317562650": {
     "chatId": 317562650,
-    "numberOfDecimal": 3,
-    "bankMame": "Монобанк",
+    "numberOfDecimal": 4,
+    "bankMame": "НБУ",
     "currencies": [
       {
-        "currencyDate": "May 30, 2023, 7:59:33 PM",
-        "bankName": "Монобанк",
-        "currency": "GBP",
-        "baseCurrency": "UAH",
-        "buy": 0.0,
-        "cross": 46.3348,
-        "sale": 0.0
-      },
-      {
-        "currencyDate": "May 30, 2023, 7:59:33 PM",
-        "bankName": "Монобанк",
+        "currencyDate": "May 31, 2023, 12:37:49 AM",
+        "bankName": "НБУ",
         "currency": "EUR",
         "baseCurrency": "UAH",
-        "buy": 39.3,
-        "cross": 0.0,
-        "sale": 40.5006
-      },
-      {
-        "currencyDate": "May 30, 2023, 7:59:33 PM",
-        "bankName": "Монобанк",
-        "currency": "USD",
-        "baseCurrency": "UAH",
-        "buy": 36.65,
-        "cross": 0.0,
-        "sale": 37.4406
+        "buy": 0.0,
+        "cross": 39.2802,
+        "sale": 0.0
       }
     ],
     "reminder": "вимк."

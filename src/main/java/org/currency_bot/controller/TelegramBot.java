@@ -17,6 +17,7 @@ import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.io.FileReader;
@@ -88,11 +89,43 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                     getInlineKeyboardMarkup(update, "Курс в " + settings.get(idFromCallbackQuery).getBankMame() + resultBuilder + defaultReminder, createCommonButtons());
                 }
                 case "Settings" -> getInlineKeyboardMarkup(update, "Налаштування", createSettingsButtons());
-                case "NumberOfDecimal" ->
-                    getInlineKeyboardMarkup(update, "Оберіть кількість знаків після коми", createButtonsWithNumberOfDecimalPlaces());
-                case "Bank" -> getInlineKeyboardMarkup(update, "Оберіть необхідний банк", createButtonsWithBanks());
+                case "NumberOfDecimal" -> {
+                    List<List<InlineKeyboardButton>> decimals = createButtonsWithNumberOfDecimalPlaces().getKeyboard();
+                    InlineKeyboardMarkup markupWithSelectedNumberOfDecimal = getMarkupWithSelectedSettings(decimals,
+                        String.valueOf(settings.get(idFromCallbackQuery).getNumberOfDecimal()),
+                        settings.get(idFromCallbackQuery).getNumberOfDecimal() + " ✅");
+
+                    getInlineKeyboardMarkup(update, "Оберіть кількість знаків після коми", markupWithSelectedNumberOfDecimal);
+                }
+                case "Bank" -> {
+                    List<List<InlineKeyboardButton>> banks = createButtonsWithBanks().getKeyboard();
+                    InlineKeyboardMarkup markupWithSelectedBank = getMarkupWithSelectedSettings(banks,
+                        settings.get(idFromCallbackQuery).getBankMame(),
+                        settings.get(idFromCallbackQuery).getBankMame() + " ✅");
+                    getInlineKeyboardMarkup(update, "Оберіть необхідний банк", markupWithSelectedBank);
+                }
                 case "Currencies" -> {
-                    getInlineKeyboardMarkup(update, "Оберіть необхідні валюти", createButtonsWithCurrencies());
+                    List<List<InlineKeyboardButton>> currencies = createButtonsWithCurrencies().getKeyboard();
+                    for (List<InlineKeyboardButton> currency : currencies) {
+                        for (InlineKeyboardButton button : currency) {
+                            for (Map.Entry<Long, UsersSettings> longUsersSettingsEntry : settings.entrySet()) {
+                                for (CurrencyHolder currencyHolder : longUsersSettingsEntry.getValue().getCurrencies()) {
+                                    if (currencyHolder.getCurrency().name().equals(button.getText())) {
+                                        button.setText(button.getText() + " ✅");
+                                    }
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                    InlineKeyboardMarkup build = InlineKeyboardMarkup.builder()
+                        .keyboard(currencies)
+                        .build();
+
+                    getInlineKeyboardMarkup(update, "Оберіть необхідні валюти", build);
                     check.put(idFromCallbackQuery, true);
                 }
                 case "Time" ->
@@ -175,6 +208,18 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
             }
         }
         writeSettingsToFile();
+    }
+
+    private InlineKeyboardMarkup getMarkupWithSelectedSettings(List<List<InlineKeyboardButton>> buttons, String textOfButton, String setText) {
+
+        buttons.stream()
+            .flatMap(List::stream)
+            .filter(button -> button.getText().equals(textOfButton))
+            .forEach(button -> button.setText(setText));
+
+        return InlineKeyboardMarkup.builder()
+            .keyboard(buttons)
+            .build();
     }
 
     @SneakyThrows
