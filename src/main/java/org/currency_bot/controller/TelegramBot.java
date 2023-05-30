@@ -1,12 +1,11 @@
-package controller;
+package org.currency_bot.controller;
 
-import static constants.Constants.*;
-import static util.ButtonCreater.*;
-
-import constants.Currencies;
-import dto.CurrenciesPack;
-import dto.CurrencyHolder;
-import dto.UsersSettings;
+import com.google.gson.reflect.TypeToken;
+import org.currency_bot.constants.Currencies;
+import org.currency_bot.dto.CurrenciesPack;
+import org.currency_bot.dto.CurrencyHolder;
+import org.currency_bot.dto.UsersSettings;
+import org.currency_bot.services.FinalSender;
 import lombok.Data;
 import lombok.SneakyThrows;
 import org.telegram.telegrambots.extensions.bots.commandbot.TelegramLongPollingCommandBot;
@@ -18,40 +17,68 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import services.commands.StartCommand;
+import org.currency_bot.services.commands.StartCommand;
 
-
-import static parsers.ParserNBU.*;
-import static parsers.ParserMonobank.*;
-import static parsers.ParserPrivatBank.*;
-
+import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
+import java.lang.reflect.Type;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static constants.Currencies.*;
+import static org.currency_bot.constants.Constants.*;
+import static org.currency_bot.parsers.ParserMonobank.getCurrencyFromMono;
+import static org.currency_bot.parsers.ParserNBU.getCurrencyFromNBU;
+import static org.currency_bot.parsers.ParserPrivatBank.getCurrencyFromPrivatBank;
+import static org.currency_bot.util.ButtonCreater.*;
 
 @Data
 public class TelegramBot extends TelegramLongPollingCommandBot {
 
-    private Map<Long, UsersSettings> settings;
-    private Map<Long, Boolean> check;
-    private UsersSettings defaultSettings;
     private static CurrenciesPack pack;
     private static Date date;
+    private Map<Long, UsersSettings> settings;
+    private Map<Long, Boolean> check;
+    private FinalSender defaultSettings;
 
     public TelegramBot() {
         register(new StartCommand());
 
         date = new Date();
-        settings = new HashMap();
+        settings = FinalSender.settings;
         check = new HashMap<>();
+    }
+
+    private static void handler(String data, InlineKeyboardMarkup markup) {
+        markup.getKeyboard().forEach(buttons ->
+                buttons.stream()
+                        .filter(button -> button.getCallbackData().equals(data))
+                        .forEach(button -> button.setText(button.getText() + " ✅")));
+    }
+
+    public static EditMessageReplyMarkup getEditMessageReplyMarkup(InlineKeyboardMarkup markup, CallbackQuery
+            callbackQuery) {
+        return EditMessageReplyMarkup.builder()
+                .chatId(callbackQuery.getMessage().getChatId().toString())
+                .messageId(callbackQuery.getMessage().getMessageId())
+                .replyMarkup(markup)
+                .build();
     }
 
     @Override
     @SneakyThrows
     public void processNonCommandUpdate(Update update) {
         if (update.hasCallbackQuery()) {
+
+            if (new File("savedSettings/entities.json").exists()) {
+                try (FileReader reader = new FileReader("savedSettings/entities.json")) {
+                    Type type = new TypeToken<Map<Long, UsersSettings>>() {
+                    }.getType();
+                    Map<Long, UsersSettings> savedSettings = GSON.fromJson(reader, type);
+                    settings.putAll(savedSettings);
+                }
+            }
+
             Long idFromCallbackQuery = update.getCallbackQuery().getFrom().getId();
             final CallbackQuery callbackQuery = update.getCallbackQuery();
             final String data = callbackQuery.getData();
@@ -129,7 +156,7 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                         .filter(entry -> entry.getValue().getChatId() == idFromCallbackQuery)
                         .forEach(entry -> entry.getValue().setNumberOfDecimal(Integer.valueOf(current)));
 
-            } else if (data.equals(USD.name()) || data.equals(EUR.name()) || data.equals(GBP.name())) {
+            } else if (data.equals(Currencies.USD.name()) || data.equals(Currencies.EUR.name()) || data.equals(Currencies.GBP.name())) {
 
                 if (check.get(idFromCallbackQuery)) {
                     Set<CurrencyHolder> newSet = new HashSet<>();
@@ -153,7 +180,7 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                         .filter(entry -> entry.getKey().equals(idFromCallbackQuery))
                         .findFirst()
                         .ifPresent(entry -> {
-                            CurrencyHolder current = getCurrencyHolder(entry.getValue().getBankMame(), getByName(data));
+                            CurrencyHolder current = getCurrencyHolder(entry.getValue().getBankMame(), Currencies.getByName(data));
                             boolean matcher = entry.getValue().getCurrencies().stream()
                                     .allMatch(currencies -> !currencies.getCurrency().name().equals(data));
 
@@ -190,34 +217,31 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
             Long idFromUpdateMessage = update.getMessage().getChat().getId();
             String textFromMessage = update.getMessage().getText();
 
-            for (String time : List.of("9", "10", "11", "12", "13", "14", "15", "16", "17", "18")) {
-                if (time.equals(textFromMessage)) {
-
-                    if (!settings.containsKey(idFromUpdateMessage)) {
-                        createUserWithDefaultSettings(idFromUpdateMessage);
-                    }
-
-                    settings.entrySet().stream()
-                            .filter(entry -> entry.getValue().getChatId() == idFromUpdateMessage)
-                            .forEach(entry -> entry.getValue().setReminder(textFromMessage));
-
-                    getMessageWithFinalSettings(update, idFromUpdateMessage, "\nЩоденне оповіщення о " + settings.get(idFromUpdateMessage).getReminder() + ":00");
-                    break;
-                }
+            if (!settings.containsKey(idFromUpdateMessage)) {
+                createUserWithDefaultSettings(idFromUpdateMessage);
             }
-            if (textFromMessage.equals("Вимкнути оповіщення")) {
+
+            boolean checkTime = List.of("9", "10", "11", "12", "13", "14", "15", "16", "17", "18").stream()
+                    .anyMatch(time -> time.equals(textFromMessage));
+
+            if (checkTime) {
+                settings.entrySet().stream()
+                        .filter(entry -> entry.getValue().getChatId() == idFromUpdateMessage)
+                        .forEach(entry -> entry.getValue().setReminder(textFromMessage));
+                getMessageWithFinalSettings(update, idFromUpdateMessage, "\nЩоденне оповіщення о " + settings.get(idFromUpdateMessage).getReminder() + ":00");
+            } else if (textFromMessage.equals("Вимкнути оповіщення")) {
                 getMessageWithFinalSettings(update, idFromUpdateMessage, "\nЩоденне оповіщення: викл.");
                 settings.get(idFromUpdateMessage).setReminder("викл.");
             }
         }
-        try (FileWriter writer = new FileWriter("entities.json")) {
+        try (FileWriter writer = new FileWriter("savedSettings/entities.json")) {
             writer.write(GSON.toJson(settings));
             writer.flush();
         }
     }
 
     @SneakyThrows
-    private void getMessageWithFinalSettings(Update update, Long idFromUpdateMessage, String message) {
+    public void getMessageWithFinalSettings(Update update, Long idFromUpdateMessage, String message) {
         execute(SendMessage.builder()
                 .text("Дякуємо!\nВаші налаштування прийняті \uD83D\uDE4C\uD83C\uDFFB " +
                         "\nОчікуйте повідомлення з актуальною інформацією:" +
@@ -242,7 +266,7 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                         date,
                         bankName,
                         currencies,
-                        UAH,
+                        Currencies.UAH,
                         cur.getBuy(),
                         cur.getCross(),
                         cur.getSale()))
@@ -252,20 +276,13 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
 
     private void createUserWithDefaultSettings(Long chatId) {
         String defaultBank = "ПриватБанк";
-        CurrencyHolder defaultCurrency1 = getCurrencyHolder(defaultBank, USD);
-        CurrencyHolder defaultCurrency2 = getCurrencyHolder(defaultBank, EUR);
+        CurrencyHolder defaultCurrency1 = getCurrencyHolder(defaultBank, Currencies.USD);
+        CurrencyHolder defaultCurrency2 = getCurrencyHolder(defaultBank, Currencies.EUR);
 
         settings.put(chatId, new UsersSettings(0, 2, defaultBank,
                 Set.of(defaultCurrency1, defaultCurrency2), "9"));
         settings.get(chatId).setChatId(chatId);
         check.put(chatId, true);
-    }
-
-    private static void handler(String data, InlineKeyboardMarkup markup) {
-        markup.getKeyboard().forEach(buttons ->
-                buttons.stream()
-                        .filter(button -> button.getCallbackData().equals(data))
-                        .forEach(button -> button.setText(button.getText() + " ✅")));
     }
 
     @SneakyThrows
@@ -286,15 +303,6 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                 .build());
     }
 
-    public static EditMessageReplyMarkup getEditMessageReplyMarkup(InlineKeyboardMarkup markup, CallbackQuery
-            callbackQuery) {
-        return EditMessageReplyMarkup.builder()
-                .chatId(callbackQuery.getMessage().getChatId().toString())
-                .messageId(callbackQuery.getMessage().getMessageId())
-                .replyMarkup(markup)
-                .build();
-    }
-
     @Override
     public String getBotUsername() {
         return BOT_NAME;
@@ -305,4 +313,10 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
         return BOT_TOKEN;
     }
 
+    public void printMessage(Long chatID, String messageText) throws TelegramApiException {
+        execute(SendMessage.builder()
+                .text(messageText)
+                .chatId(chatID)
+                .build());
+    }
 }

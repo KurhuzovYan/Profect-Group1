@@ -1,4 +1,4 @@
-package dto;
+package org.currency_bot.dto;
 
 import lombok.Data;
 

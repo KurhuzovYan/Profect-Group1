@@ -1,4 +1,4 @@
-package util;
+package org.currency_bot.util;
 
 import java.util.Date;
 

@@ -1,14 +1,13 @@
-package parsers;
+package org.currency_bot.parsers;
 
-import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import constants.Currencies;
-import dto.CurrencyHolder;
-import dto.general.Monobank;
-import dto.CurrenciesPack;
+import org.currency_bot.constants.Currencies;
+import org.currency_bot.dto.CurrenciesPack;
+import org.currency_bot.dto.CurrencyHolder;
+import org.currency_bot.dto.general.Monobank;
 import lombok.SneakyThrows;
 
-import static constants.Constants.*;
+import static org.currency_bot.constants.Constants.*;
 
 import java.io.IOException;
 import java.lang.reflect.Type;

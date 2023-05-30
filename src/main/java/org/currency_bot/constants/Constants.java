@@ -1,4 +1,4 @@
-package constants;
+package org.currency_bot.constants;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

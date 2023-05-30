@@ -1,4 +1,4 @@
-package constants;
+package org.currency_bot.constants;
 
 public enum Currencies {
     UAH("Українська Гривня",980),

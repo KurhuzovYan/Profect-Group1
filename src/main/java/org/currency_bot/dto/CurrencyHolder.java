@@ -1,6 +1,6 @@
-package dto;
+package org.currency_bot.dto;
 
-import constants.Currencies;
+import org.currency_bot.constants.Currencies;
 import lombok.Data;
 
 import java.util.Date;
