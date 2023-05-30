@@ -213,7 +213,7 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
     }
 
     private void writeSettingsToFile() throws IOException {
-        try (FileWriter writer = new FileWriter("src/main/java/resources/entities.json")) {
+        try (FileWriter writer = new FileWriter("src/main/resources/entities.json")) {
             writer.write(GSON.toJson(settings));
             writer.flush();
         }
@@ -221,7 +221,7 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
 
     @SneakyThrows
     private void readSavedSettings() {
-        try (FileReader reader = new FileReader("src/main/java/resources/entities.json")) {
+        try (FileReader reader = new FileReader("src/main/resources/entities.json")) {
             Type type = new TypeToken<Map<Long, UsersSettings>>() {
             }.getType();
             Map<Long, UsersSettings> savedSettings = GSON.fromJson(reader, type);

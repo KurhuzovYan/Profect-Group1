@@ -1,0 +1,63 @@
+{
+  "521924244": {
+    "chatId": 521924244,
+    "numberOfDecimal": 2,
+    "bankMame": "ПриватБанк",
+    "currencies": [
+      {
+        "currencyDate": "May 30, 2023, 7:24:17 PM",
+        "bankName": "ПриватБанк",
+        "currency": "USD",
+        "baseCurrency": "UAH",
+        "buy": 36.5686,
+        "cross": 0.0,
+        "sale": 37.45318
+      },
+      {
+        "currencyDate": "May 30, 2023, 7:24:17 PM",
+        "bankName": "ПриватБанк",
+        "currency": "EUR",
+        "baseCurrency": "UAH",
+        "buy": 39.05,
+        "cross": 0.0,
+        "sale": 40.65041
+      }
+    ],
+    "reminder": "9"
+  },
+  "317562650": {
+    "chatId": 317562650,
+    "numberOfDecimal": 3,
+    "bankMame": "Монобанк",
+    "currencies": [
+      {
+        "currencyDate": "May 30, 2023, 7:59:33 PM",
+        "bankName": "Монобанк",
+        "currency": "GBP",
+        "baseCurrency": "UAH",
+        "buy": 0.0,
+        "cross": 46.3348,
+        "sale": 0.0
+      },
+      {
+        "currencyDate": "May 30, 2023, 7:59:33 PM",
+        "bankName": "Монобанк",
+        "currency": "EUR",
+        "baseCurrency": "UAH",
+        "buy": 39.3,
+        "cross": 0.0,
+        "sale": 40.5006
+      },
+      {
+        "currencyDate": "May 30, 2023, 7:59:33 PM",
+        "bankName": "Монобанк",
+        "currency": "USD",
+        "baseCurrency": "UAH",
+        "buy": 36.65,
+        "cross": 0.0,
+        "sale": 37.4406
+      }
+    ],
+    "reminder": "вимк."
+  }
+}
