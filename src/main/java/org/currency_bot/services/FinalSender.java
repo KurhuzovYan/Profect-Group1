@@ -13,8 +13,8 @@ public class FinalSender {
     public static final Map<Long, UsersSettings> settings = new HashMap<>();
 
     public static String sendMessage(Long chatId) {
-        String defaultReminder = settings.get(chatId).getReminder().equals("викл.") ?
-                "\n\nЩоденне оповіщення: викл." : "\n\nЩоденне оповіщення о " + settings.get(chatId).getReminder() + ":00";
+        String defaultReminder = settings.get(chatId).getReminder().equals("вимк.") ?
+                "\n\nЩоденне оповіщення: вимк." : "\n\nЩоденне оповіщення о " + settings.get(chatId).getReminder() + ":00";
 
         List<CurrencyHolder> allUsers = settings.get(chatId).getCurrencies().stream().toList();
 
