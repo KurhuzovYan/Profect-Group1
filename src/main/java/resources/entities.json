@@ -1,0 +1,54 @@
+{
+  "375940888": {
+    "chatId": 375940888,
+    "numberOfDecimal": 4,
+    "bankMame": "НБУ",
+    "currencies": [
+      {
+        "currencyDate": "May 30, 2023, 5:35:01 PM",
+        "bankName": "НБУ",
+        "currency": "EUR",
+        "baseCurrency": "UAH",
+        "buy": 0.0,
+        "cross": 39.2802,
+        "sale": 0.0
+      },
+      {
+        "currencyDate": "May 30, 2023, 5:35:01 PM",
+        "bankName": "НБУ",
+        "currency": "GBP",
+        "baseCurrency": "UAH",
+        "buy": 0.0,
+        "cross": 45.4712,
+        "sale": 0.0
+      }
+    ],
+    "reminder": "вимк."
+  },
+  "317562650": {
+    "chatId": 317562650,
+    "numberOfDecimal": 3,
+    "bankMame": "Монобанк",
+    "currencies": [
+      {
+        "currencyDate": "May 30, 2023, 5:35:01 PM",
+        "bankName": "Монобанк",
+        "currency": "GBP",
+        "baseCurrency": "UAH",
+        "buy": 0.0,
+        "cross": 46.314,
+        "sale": 0.0
+      },
+      {
+        "currencyDate": "May 30, 2023, 5:35:01 PM",
+        "bankName": "Монобанк",
+        "currency": "EUR",
+        "baseCurrency": "UAH",
+        "buy": 39.3,
+        "cross": 0.0,
+        "sale": 40.5006
+      }
+    ],
+    "reminder": "18"
+  }
+}

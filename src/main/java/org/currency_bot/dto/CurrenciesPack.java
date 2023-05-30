@@ -1,8 +1,7 @@
-package dto;
+package org.currency_bot.dto;
 
 import lombok.Data;
 
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;

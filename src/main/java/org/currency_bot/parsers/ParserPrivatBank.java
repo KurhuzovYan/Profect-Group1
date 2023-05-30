@@ -1,11 +1,11 @@
-package parsers;
+package org.currency_bot.parsers;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import constants.Currencies;
-import dto.CurrenciesPack;
-import dto.CurrencyHolder;
-import dto.general.PrivatBank;
+import org.currency_bot.constants.Currencies;
+import org.currency_bot.dto.CurrenciesPack;
+import org.currency_bot.dto.CurrencyHolder;
+import org.currency_bot.dto.general.PrivatBank;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -17,9 +17,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static constants.Currencies.*;
-
-import static constants.Constants.*;
+import static org.currency_bot.constants.Constants.*;
 
 
 public class ParserPrivatBank {
@@ -65,7 +63,7 @@ public class ParserPrivatBank {
     public static CurrenciesPack getCurrencyFromPrivatBank() {
         List<PrivatBank> currencies = sendRequest("&coursid=11");
         List<PrivatBank> gbp = sendRequest("&coursid=12").stream()
-                .filter(currency -> currency.getCcy().equals(GBP.name()))
+                .filter(currency -> currency.getCcy().equals(Currencies.GBP.name()))
                 .collect(Collectors.toList());
         currencies.add(gbp.get(0));
 
@@ -77,11 +75,13 @@ public class ParserPrivatBank {
 
         List<CurrencyHolder> collect = currencies.stream()
                 .map(cur -> new CurrencyHolder(
-                        cur.getSale(),
-                        0,
+                        date,
+                        "ПриватБанк",
+                        Currencies.getByName(cur.getCcy()),
+                        Currencies.UAH,
                         cur.getBuy(),
-                        UAH,
-                        Currencies.getByName(cur.getCcy())))
+                        0,
+                        cur.getSale()))
                 .collect(Collectors.toList());
         pack.setCurrencies(collect);
 

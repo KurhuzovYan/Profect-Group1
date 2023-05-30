@@ -1,11 +1,11 @@
-package parsers;
+package org.currency_bot.parsers;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import constants.Currencies;
-import dto.CurrenciesPack;
-import dto.CurrencyHolder;
-import dto.general.NBU;
+import org.currency_bot.constants.Currencies;
+import org.currency_bot.dto.CurrenciesPack;
+import org.currency_bot.dto.CurrencyHolder;
+import org.currency_bot.dto.general.NBU;
 import lombok.SneakyThrows;
 
 import java.lang.reflect.Type;
@@ -16,9 +16,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static constants.Constants.*;
-import static constants.Currencies.*;
-
+import static org.currency_bot.constants.Constants.*;
 
 public class ParserNBU {
     private static CurrenciesPack pack = new CurrenciesPack();
@@ -32,11 +30,13 @@ public class ParserNBU {
 
         List<CurrencyHolder> collect = getCommonCurrencies().stream()
                 .map(cur -> new CurrencyHolder(
+                        date,
+                        "НБУ",
+                        Currencies.getById(cur.getR030()),
+                        Currencies.UAH,
                         0,
                         cur.getRate(),
-                        0,
-                        UAH,
-                      Currencies.getById(cur.getR030())))
+                        0))
                 .collect(Collectors.toList());
         pack.setCurrencies(collect);
 
@@ -46,9 +46,9 @@ public class ParserNBU {
     public static List<NBU> getCommonCurrencies() {
         List<NBU> currencies = parseNBU();
         return currencies.stream()
-                .filter(currency -> currency.getCc().equals(USD.name()) ||
-                        currency.getCc().equals(EUR.name()) ||
-                        currency.getCc().equals(GBP.name()))
+                .filter(currency -> currency.getCc().equals(Currencies.USD.name()) ||
+                        currency.getCc().equals(Currencies.EUR.name()) ||
+                        currency.getCc().equals(Currencies.GBP.name()))
                 .collect(Collectors.toList());
     }
 

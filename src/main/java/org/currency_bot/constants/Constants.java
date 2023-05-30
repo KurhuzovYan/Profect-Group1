@@ -1,4 +1,7 @@
-package constants;
+package org.currency_bot.constants;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import java.net.http.HttpClient;
 
@@ -10,5 +13,5 @@ public class Constants {
     public static final String NBU_API_URL = "https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json";
     public static final String MONO_API_URL = "https://api.monobank.ua/bank/currency";
     public static final HttpClient CLIENT = HttpClient.newHttpClient();
+    public static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 }
- 
