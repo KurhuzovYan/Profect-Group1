@@ -17,12 +17,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.currency_bot.constants.Constants.*;
-
+import static org.currency_bot.constants.Constants.PRIVAT_API_URL;
 
 public class ParserPrivatBank {
 
-    private static CurrenciesPack pack = new CurrenciesPack();
+    private static final CurrenciesPack pack = new CurrenciesPack();
 
     public static List<PrivatBank> sendRequest(String endpoint) {
         HttpURLConnection connection = null;
@@ -63,8 +62,8 @@ public class ParserPrivatBank {
     public static CurrenciesPack getCurrencyFromPrivatBank() {
         List<PrivatBank> currencies = sendRequest("&coursid=11");
         List<PrivatBank> gbp = sendRequest("&coursid=12").stream()
-                .filter(currency -> currency.getCcy().equals(Currencies.GBP.name()))
-                .collect(Collectors.toList());
+            .filter(currency -> currency.getCcy().equals(Currencies.GBP.name()))
+            .collect(Collectors.toList());
         currencies.add(gbp.get(0));
 
         Date date = new Date();
@@ -74,15 +73,15 @@ public class ParserPrivatBank {
         pack.setBankName("ПриватБанк");
 
         List<CurrencyHolder> collect = currencies.stream()
-                .map(cur -> new CurrencyHolder(
-                        date,
-                        "ПриватБанк",
-                        Currencies.getByName(cur.getCcy()),
-                        Currencies.UAH,
-                        cur.getBuy(),
-                        0,
-                        cur.getSale()))
-                .collect(Collectors.toList());
+            .map(cur -> new CurrencyHolder(
+                date,
+                "ПриватБанк",
+                Currencies.getByName(cur.getCcy()),
+                Currencies.UAH,
+                cur.getBuy(),
+                0,
+                cur.getSale()))
+            .collect(Collectors.toList());
         pack.setCurrencies(collect);
 
         return pack;

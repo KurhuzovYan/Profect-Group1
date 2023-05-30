@@ -1,6 +1,7 @@
 package org.currency_bot.dto.general;
 
 import lombok.Data;
+
 @Data
 public class NBU {
 

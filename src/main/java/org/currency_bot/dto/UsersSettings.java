@@ -2,9 +2,11 @@ package org.currency_bot.dto;
 
 import lombok.Data;
 
-import java.util.*;
+import java.util.Set;
+
 @Data
 public class UsersSettings {
+
     private long chatId;
     private int numberOfDecimal;
     private String bankMame;
@@ -22,10 +24,10 @@ public class UsersSettings {
     @Override
     public String toString() {
         return "Курс в " + bankMame +
-                ", кількість знаків після коми = " + numberOfDecimal +
-                ", необхідні валюти = " + currencies +
-                ", час сповіщення = " + reminder +
-                '}';
+            ", кількість знаків після коми = " + numberOfDecimal +
+            ", необхідні валюти = " + currencies +
+            ", час сповіщення = " + reminder +
+            '}';
     }
 }
 
