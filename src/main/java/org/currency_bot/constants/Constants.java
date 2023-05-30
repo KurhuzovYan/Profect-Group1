@@ -15,4 +15,3 @@ public class Constants {
     public static final HttpClient CLIENT = HttpClient.newHttpClient();
     public static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 }
- 
