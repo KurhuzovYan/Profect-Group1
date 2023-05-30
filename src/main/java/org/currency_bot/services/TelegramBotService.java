@@ -6,7 +6,8 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
 public class TelegramBotService {
-    private TelegramBot telegramBot;
+
+    private final TelegramBot telegramBot;
 
     public TelegramBotService() {
         this.telegramBot = new TelegramBot();
@@ -18,6 +19,5 @@ public class TelegramBotService {
             throw new RuntimeException(e);
         }
     }
-
 
 }

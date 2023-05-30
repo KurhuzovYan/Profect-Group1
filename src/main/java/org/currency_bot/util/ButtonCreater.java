@@ -6,73 +6,75 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.currency_bot.constants.Currencies.*;
-
 
 public class ButtonCreater {
 
     public static InlineKeyboardMarkup createCommonButtons() {
         List<InlineKeyboardButton> buttons = new ArrayList<>(Arrays.asList(
-                getInlineKeyboardButton("Отримати інфо", "Info"),
-                getInlineKeyboardButton("Налаштування", "Settings")
+            getInlineKeyboardButton("Отримати інфо", "Info"),
+            getInlineKeyboardButton("Налаштування", "Settings")
         ));
         return getSingleInlineKeyboardMarkup(buttons);
     }
 
     public static InlineKeyboardMarkup createSettingsButtons() {
         List<InlineKeyboardButton> settingsButtons = new ArrayList<>(Arrays.asList(
-                getInlineKeyboardButton("Кількість знаків після коми", "NumberOfDecimal"),
-                getInlineKeyboardButton("Банк", "Bank"),
-                getInlineKeyboardButton("Валюти", "Currencies"),
-                getInlineKeyboardButton("Час оповіщення", "Time")
+            getInlineKeyboardButton("Кількість знаків після коми", "NumberOfDecimal"),
+            getInlineKeyboardButton("Банк", "Bank"),
+            getInlineKeyboardButton("Валюти", "Currencies"),
+            getInlineKeyboardButton("Час оповіщення", "Time")
         ));
         return getInlineKeyboardMarkup(getLists(settingsButtons));
     }
 
     public static InlineKeyboardMarkup createButtonsWithNumberOfDecimalPlaces() {
         List<InlineKeyboardButton> digitsButtons = new ArrayList<>(Arrays.asList(
-                getInlineKeyboardButton("2", "2"),
-                getInlineKeyboardButton("3", "3"),
-                getInlineKeyboardButton("4", "4"),
-                getInlineKeyboardButton("Підтвердити ✅", "Confirm")
+            getInlineKeyboardButton("2", "2"),
+            getInlineKeyboardButton("3", "3"),
+            getInlineKeyboardButton("4", "4"),
+            getInlineKeyboardButton("Підтвердити ✅", "Confirm")
         ));
         return getInlineKeyboardMarkup(getLists(digitsButtons));
     }
 
     public static InlineKeyboardMarkup createButtonsWithCurrencies() {
         List<InlineKeyboardButton> currenciesButtons = new ArrayList<>(Arrays.asList(
-                getInlineKeyboardButton(USD.name(), "USD"),
-                getInlineKeyboardButton(EUR.name(), "EUR"),
-                getInlineKeyboardButton(GBP.name(), "GBP"),
-                getInlineKeyboardButton("Підтвердити ✅", "Confirm")
+            getInlineKeyboardButton(USD.name(), "USD"),
+            getInlineKeyboardButton(EUR.name(), "EUR"),
+            getInlineKeyboardButton(GBP.name(), "GBP"),
+            getInlineKeyboardButton("Підтвердити ✅", "Confirm")
         ));
         return getInlineKeyboardMarkup(getLists(currenciesButtons));
     }
 
     public static InlineKeyboardMarkup createButtonsWithBanks() {
         List<InlineKeyboardButton> banksButtons = new ArrayList<>(Arrays.asList(
-                getInlineKeyboardButton("ПриватБанк", "ПриватБанк"),
-                getInlineKeyboardButton("Монобанк", "Монобанк"),
-                getInlineKeyboardButton("НБУ", "НБУ"),
-                getInlineKeyboardButton("Підтвердити ✅", "Confirm")
+            getInlineKeyboardButton("ПриватБанк", "ПриватБанк"),
+            getInlineKeyboardButton("Монобанк", "Монобанк"),
+            getInlineKeyboardButton("НБУ", "НБУ"),
+            getInlineKeyboardButton("Підтвердити ✅", "Confirm")
         ));
         return getInlineKeyboardMarkup(getLists(banksButtons));
     }
 
     public static ReplyKeyboardMarkup createReminderButtons() {
         List<KeyboardButton> listOfButtons = List.of("9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "Вимкнути оповіщення").stream()
-                .map(KeyboardButton::new)
-                .collect(Collectors.toList());
+            .map(KeyboardButton::new)
+            .collect(Collectors.toList());
 
         List<KeyboardRow> rows = new ArrayList<>(
-                Arrays.asList(new KeyboardRow(),
-                        new KeyboardRow(),
-                        new KeyboardRow(),
-                        new KeyboardRow()
-                ));
+            Arrays.asList(new KeyboardRow(),
+                new KeyboardRow(),
+                new KeyboardRow(),
+                new KeyboardRow()
+            ));
 
         for (int i = 0; i < listOfButtons.size(); i++) {
             if (i <= 2) rows.get(0).add(listOfButtons.get(i));
@@ -82,33 +84,33 @@ public class ButtonCreater {
         }
 
         return ReplyKeyboardMarkup.builder()
-                .keyboard(rows)
-                .resizeKeyboard(true)
-                .build();
+            .keyboard(rows)
+            .resizeKeyboard(true)
+            .build();
     }
 
     private static List<List<InlineKeyboardButton>> getLists(List<InlineKeyboardButton> listButtons) {
         return listButtons.stream()
-                .map(Collections::singletonList)
-                .collect(Collectors.toList());
+            .map(Collections::singletonList)
+            .collect(Collectors.toList());
     }
 
     private static InlineKeyboardMarkup getSingleInlineKeyboardMarkup(List<InlineKeyboardButton> buttons) {
         return InlineKeyboardMarkup.builder()
-                .keyboard(Collections.singleton(buttons))
-                .build();
+            .keyboard(Collections.singleton(buttons))
+            .build();
     }
 
     private static InlineKeyboardMarkup getInlineKeyboardMarkup(List<List<InlineKeyboardButton>> buttons) {
         return InlineKeyboardMarkup.builder()
-                .keyboard(buttons)
-                .build();
+            .keyboard(buttons)
+            .build();
     }
 
     private static InlineKeyboardButton getInlineKeyboardButton(String textOfButton, String callbackData) {
         return InlineKeyboardButton.builder()
-                .text(textOfButton)
-                .callbackData(callbackData)
-                .build();
+            .text(textOfButton)
+            .callbackData(callbackData)
+            .build();
     }
 }

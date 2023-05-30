@@ -14,14 +14,14 @@ public class FinalSender {
 
     public static String sendMessage(Long chatId) {
         String defaultReminder = settings.get(chatId).getReminder().equals("вимк.") ?
-                "\n\nЩоденне оповіщення: вимк." : "\n\nЩоденне оповіщення о " + settings.get(chatId).getReminder() + ":00";
+            "\n\nЩоденне оповіщення: вимк." : "\n\nЩоденне оповіщення о " + settings.get(chatId).getReminder() + ":00";
 
         List<CurrencyHolder> allUsers = settings.get(chatId).getCurrencies().stream().toList();
 
         Double[] courses = allUsers.stream()
-                .map(currency -> new Double[]{currency.getBuy(), currency.getCross(), currency.getSale()})
-                .flatMap(Arrays::stream)
-                .toArray(Double[]::new);
+            .map(currency -> new Double[]{currency.getBuy(), currency.getCross(), currency.getSale()})
+            .flatMap(Arrays::stream)
+            .toArray(Double[]::new);
 
         StringBuilder resultBuilder = new StringBuilder("Курс в " + settings.get(chatId).getBankMame());
 
@@ -31,11 +31,11 @@ public class FinalSender {
             String sale = courses[i * 3 + 2] != 0 ? "\nПродаж: " + String.format("%." + settings.get(chatId).getNumberOfDecimal() + "f", allUsers.get(i).getSale()) : "";
 
             resultBuilder.append("\n\nВалютна пара: ")
-                    .append(allUsers.get(i).getCurrency().name())
-                    .append("/UAH")
-                    .append(buy)
-                    .append(cross)
-                    .append(sale);
+                .append(allUsers.get(i).getCurrency().name())
+                .append("/UAH")
+                .append(buy)
+                .append(cross)
+                .append(sale);
         }
         resultBuilder.append(defaultReminder);
         return resultBuilder.toString();
