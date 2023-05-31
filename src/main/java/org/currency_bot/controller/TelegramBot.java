@@ -106,20 +106,20 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                 }
                 case "Currencies" -> {
                     List<List<InlineKeyboardButton>> currencies = createButtonsWithCurrencies().getKeyboard();
-                    for (List<InlineKeyboardButton> currency : currencies) {
-                        for (InlineKeyboardButton button : currency) {
-                            for (Map.Entry<Long, UsersSettings> longUsersSettingsEntry : settings.entrySet()) {
-                                for (CurrencyHolder currencyHolder : longUsersSettingsEntry.getValue().getCurrencies()) {
-                                    if (currencyHolder.getCurrency().name().equals(button.getText())) {
-                                        button.setText(button.getText() + " ✅");
-                                    }
-                                }
 
+                    settings.get(idFromCallbackQuery)
+                        .getCurrencies()
+                        .stream()
+                        .map(CurrencyHolder::getCurrency)
+                        .map(Enum::name)
+                        .forEach(currencyName -> {
+                            for (List<InlineKeyboardButton> currency : currencies) {
+                                currency.stream()
+                                    .filter(button -> button.getText().equals(currencyName))
+                                    .findFirst()
+                                    .ifPresent(button -> button.setText(button.getText() + " ✅"));
                             }
-
-                        }
-
-                    }
+                        });
 
                     InlineKeyboardMarkup build = InlineKeyboardMarkup.builder()
                         .keyboard(currencies)
@@ -146,12 +146,6 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
 
             } else if (data.equals(USD.name()) || data.equals(EUR.name()) || data.equals(GBP.name())) {
 
-                if (check.get(idFromCallbackQuery)) {
-                    Set<CurrencyHolder> newSet = new HashSet<>();
-                    settings.get(idFromCallbackQuery).setCurrencies(newSet);
-                    check.put(idFromCallbackQuery, false);
-                }
-
                 InlineKeyboardMarkup replyMarkup = callbackQuery.getMessage().getReplyMarkup();
                 replyMarkup.getKeyboard().forEach(buttons -> buttons.stream().filter(button -> button.getCallbackData().equals(data)).forEach(button -> {
                     if (button.getText().equals(data)) {
@@ -161,16 +155,19 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                     }
                 }));
 
-                settings.entrySet().stream().filter(entry -> entry.getKey().equals(idFromCallbackQuery)).findFirst().ifPresent(entry -> {
-                    CurrencyHolder current = getCurrencyHolder(entry.getValue().getBankMame(), Currencies.getByName(data));
-                    boolean matcher = entry.getValue().getCurrencies().stream().noneMatch(currencies -> currencies.getCurrency().name().equals(data));
+                long count = settings.get(idFromCallbackQuery).getCurrencies().stream()
+                    .filter(cur -> cur.getCurrency().name().equals(data))
+                    .count();
 
-                    if (entry.getValue().getCurrencies().isEmpty() || matcher) {
-                        entry.getValue().getCurrencies().add(current);
-                    } else {
-                        entry.getValue().getCurrencies().remove(current);
-                    }
-                });
+                if (count == 0) {
+                    CurrencyHolder current = getCurrencyHolder(settings.get(idFromCallbackQuery).getBankMame(), Currencies.getByName(data));
+                    settings.get(idFromCallbackQuery).getCurrencies().add(current);
+                } else {
+                    List<CurrencyHolder> collect = settings.get(idFromCallbackQuery).getCurrencies().stream()
+                        .filter(cur -> cur.getCurrency().name().equals(data))
+                        .collect(Collectors.toList());
+                    settings.get(idFromCallbackQuery).getCurrencies().remove(collect.get(0));
+                }
 
                 execute(getEditMessageReplyMarkup(replyMarkup, callbackQuery));
 
@@ -207,7 +204,9 @@ public class TelegramBot extends TelegramLongPollingCommandBot {
                 settings.get(idFromUpdateMessage).setReminder("вимк.");
             }
         }
+
         writeSettingsToFile();
+
     }
 
     private InlineKeyboardMarkup getMarkupWithSelectedSettings(List<List<InlineKeyboardButton>> buttons, String textOfButton, String setText) {
