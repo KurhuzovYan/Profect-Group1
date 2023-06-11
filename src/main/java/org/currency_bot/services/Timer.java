@@ -7,12 +7,17 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Map;
 
-import static org.currency_bot.services.FinalSender.sendMessage;
-import static org.currency_bot.services.FinalSender.settings;
+import static org.currency_bot.services.messages.InfoMessage.sendInfoMassage;
+import static org.currency_bot.services.ReadAndWrite.readSavedSettings;
+
 
 public class Timer implements Runnable {
 
+    private static TelegramBot bot = new TelegramBot();
+
     public static void timer() throws InterruptedException, TelegramApiException {
+        readSavedSettings(bot.getSettings());
+
         LocalDateTime startTime = LocalDateTime.now();
         LocalDateTime startDays = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0);
         LocalDateTime timeSendMessage = LocalDateTime.now().withMinute(0).withSecond(0);
@@ -22,13 +27,13 @@ public class Timer implements Runnable {
         Duration timeToSendMess = Duration.between(startTime, timeSendMessage);
         Thread.sleep(timeToSendMess.toMillis());
         Duration hour = Duration.between(startDays, timeSendMessage);
-        for (Map.Entry userSet : settings.entrySet()) {
+        for (Map.Entry userSet : bot.getSettings().entrySet()) {
             Long key = (Long) userSet.getKey();
-            Long chatId = settings.get(key).getChatId();
-            int userNotificationTime = isDigit(settings.get(key).getReminder()) ? Integer.parseInt(settings.get(key).getReminder()) : 0;
+            Long chatId = bot.getSettings().get(key).getChatId();
+            int userNotificationTime = isDigit(bot.getSettings().get(key).getReminder()) ? Integer.parseInt(bot.getSettings().get(key).getReminder()) : 0;
             if (userNotificationTime == (int) hour.toHours()) {
                 TelegramBot timer = new TelegramBot();
-                timer.printMessage(chatId, sendMessage(chatId));
+                timer.printMessageByReminder(chatId, sendInfoMassage(bot.getSettings(), chatId));
             }
         }
     }
